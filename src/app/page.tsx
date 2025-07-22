@@ -70,7 +70,7 @@ export default function Home() {
                       Hoàn thành Captcha
                     </h4>
                     <p className="text-gray-600 text-sm">
-                      Giải phép tính toán đơn giản và nhấn "Xác minh"
+                      Chỉ cần tích vào "Tôi không phải robot" để xác minh
                     </p>
                   </div>
                 </div>
@@ -125,7 +125,8 @@ export default function Home() {
                     </span>
                   </div>
                   <p className="text-xs text-blue-700 mt-2">
-                    Captcha giúp bảo vệ hệ thống khỏi các cuộc tấn công tự động
+                    Captcha đơn giản giúp bảo vệ hệ thống khỏi spam và bot tự
+                    động
                   </p>
                 </div>
               </div>

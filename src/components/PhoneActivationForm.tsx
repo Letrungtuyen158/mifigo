@@ -2,7 +2,7 @@
 
 import React, { useState, useTransition, useActionState } from "react";
 import toast from "react-hot-toast";
-import SimpleCaptcha from "./SimpleCaptcha";
+import SimpleCaptchaCheckbox from "./SimpleCaptchaCheckbox";
 import {
   activatePhoneAction,
   PhoneActivationResult,
@@ -23,6 +23,11 @@ export default function PhoneActivationForm() {
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/[^0-9+]/g, "");
     setPhoneNumber(value);
+  };
+
+  // Handle captcha verification
+  const handleCaptchaVerify = (isVerified: boolean) => {
+    setIsCaptchaVerified(isVerified);
   };
 
   // Handle server action response
@@ -91,7 +96,7 @@ export default function PhoneActivationForm() {
               className="block w-full pl-12 pr-4 py-4 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 text-lg font-medium shadow-sm text-gray-900 placeholder:text-gray-500 placeholder:font-medium"
               disabled={isPending}
             />
-            {/* Hidden input để pass captcha verification state */}
+            {/* Hidden inputs để pass captcha verification state và token */}
             <input
               type="hidden"
               name="captchaVerified"
@@ -104,8 +109,8 @@ export default function PhoneActivationForm() {
           <label className="block text-base font-bold text-gray-900 mb-3">
             Xác minh Captcha
           </label>
-          <SimpleCaptcha
-            onVerify={setIsCaptchaVerified}
+          <SimpleCaptchaCheckbox
+            onVerify={handleCaptchaVerify}
             resetTrigger={resetTrigger}
             className="w-full"
           />
