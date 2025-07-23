@@ -6,10 +6,10 @@ export default function Home() {
       {/* Header */}
       <div className="text-center mb-8 lg:mb-12">
         <h1 className="text-4xl lg:text-5xl font-black text-gray-900 mb-4 tracking-tight">
-          Mifigo Active UI
+          Mifigo Active Data Plan (开通5G套餐)
         </h1>
         <p className="text-lg lg:text-xl font-medium text-gray-700 mb-6">
-          Kích hoạt số điện thoại một cách an toàn và nhanh chóng
+          Make simple life for travelling (让旅行生活更简单)
         </p>
       </div>
 
@@ -41,7 +41,7 @@ export default function Home() {
                   </svg>
                 </div>
                 <h3 className="text-xl lg:text-2xl font-bold text-gray-900">
-                  Hướng dẫn sử dụng
+                  Instructions (指示)
                 </h3>
               </div>
 
@@ -52,11 +52,11 @@ export default function Home() {
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-1">
-                      Nhập số điện thoại
+                      Enter mobile number (输入手机号码)
                     </h4>
                     <p className="text-gray-600 text-sm">
-                      Nhập số điện thoại hợp lệ (VD: 0123456789 hoặc
-                      +84123456789)
+                      Enter mobile number on simcard (07612345567 or
+                      +84761234567)
                     </p>
                   </div>
                 </div>
@@ -67,10 +67,11 @@ export default function Home() {
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-1">
-                      Hoàn thành Captcha
+                      CAPTCHA verify (我不是机器人)
                     </h4>
                     <p className="text-gray-600 text-sm">
-                      Chỉ cần tích vào "Tôi không phải robot" để xác minh
+                      Click "I am not robot" to verify
+                      (点击"我不是机器人"进行验证)
                     </p>
                   </div>
                 </div>
@@ -81,10 +82,11 @@ export default function Home() {
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-1">
-                      Kích hoạt
+                      ACTIVE (立即激活)
                     </h4>
                     <p className="text-gray-600 text-sm">
-                      Nhấn "Kích hoạt ngay" để gửi yêu cầu đến server
+                      Click to ACTIVE button to activate data plan
+                      (点击"ACTIVE"按钮激活数据计划)
                     </p>
                   </div>
                 </div>
@@ -95,10 +97,11 @@ export default function Home() {
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-1">
-                      Nhận kết quả
+                      Result Information (结果信息)
                     </h4>
                     <p className="text-gray-600 text-sm">
-                      Chờ thông báo kết quả thành công hoặc thất bại
+                      The result will inform you activate data plan successfully
+                      or not (结果将告知您是否成功激活数据计划)
                     </p>
                   </div>
                 </div>
@@ -121,12 +124,12 @@ export default function Home() {
                       />
                     </svg>
                     <span className="text-sm font-medium text-blue-900">
-                      Bảo mật và an toàn
+                      Security and Safety
                     </span>
                   </div>
                   <p className="text-xs text-blue-700 mt-2">
-                    Captcha đơn giản giúp bảo vệ hệ thống khỏi spam và bot tự
-                    động
+                    By activating, you agree to our terms of service
+                    (激活即表示您同意我们的服务条款)
                   </p>
                 </div>
               </div>
