@@ -68,7 +68,7 @@ export default function SimpleCaptchaCheckbox({
               htmlFor="simple-captcha"
               className="text-base font-medium text-gray-900 cursor-pointer flex-1"
             >
-              Tôi không phải robot
+              I am not robot (我不是机器人)
             </label>
 
             {/* reCAPTCHA-like logo */}
@@ -106,7 +106,7 @@ export default function SimpleCaptchaCheckbox({
                 clipRule="evenodd"
               />
             </svg>
-            Xác minh thành công!
+            Successful! (成功的!)
           </div>
         )}
 
@@ -127,14 +127,15 @@ export default function SimpleCaptchaCheckbox({
               />
             </svg>
             <span className="text-sm font-medium text-blue-900">
-              Bảo mật đơn giản
+              Security and Safety
             </span>
           </div>
           <p className="text-xs text-blue-700 mt-2 text-center">
-            Chỉ cần tích vào để xác minh bạn không phải robot
+            Click "I am not robot" to verify (点击"我不是机器人"进行验证)
           </p>
         </div>
       </div>
     </div>
   );
 }
+

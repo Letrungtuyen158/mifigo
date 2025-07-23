@@ -56,10 +56,10 @@ export default function PhoneActivationForm() {
     <div className="w-full bg-white rounded-xl shadow-2xl border border-gray-200 p-6 lg:p-8">
       <div className="text-center mb-6 lg:mb-8">
         <h2 className="text-2xl lg:text-3xl font-black text-gray-900 mb-3">
-          Kích hoạt số điện thoại
+          Enter Mobile Number (输入手机号码)
         </h2>
         <p className="text-base lg:text-lg font-medium text-gray-700">
-          Nhập số điện thoại của bạn để kích hoạt dịch vụ
+          Enter mobile number on simcard to activate data plan
         </p>
       </div>
 
@@ -69,7 +69,7 @@ export default function PhoneActivationForm() {
             htmlFor="phone"
             className="block text-base font-bold text-gray-900 mb-3"
           >
-            Số điện thoại
+            Mobile number (手机号码)
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -107,7 +107,7 @@ export default function PhoneActivationForm() {
 
         <div>
           <label className="block text-base font-bold text-gray-900 mb-3">
-            Xác minh Captcha
+            CAPTCHA verify (我不是机器人)
           </label>
           <SimpleCaptchaCheckbox
             onVerify={handleCaptchaVerify}
@@ -143,18 +143,18 @@ export default function PhoneActivationForm() {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 ></path>
               </svg>
-              Đang xử lý...
+              Processing...
             </>
           ) : (
-            "Kích hoạt ngay"
+            "ACTIVE (立即激活)"
           )}
         </button>
       </form>
 
       <div className="mt-6 lg:mt-8 text-center">
         <p className="text-xs lg:text-sm font-medium text-gray-600">
-          Bằng cách kích hoạt, bạn đồng ý với các điều khoản dịch vụ của chúng
-          tôi
+          By activating, you agree to our terms of service
+          (激活即表示您同意我们的服务条款)
         </p>
       </div>
     </div>
