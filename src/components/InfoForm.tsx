@@ -21,20 +21,24 @@ export default function InfoForm() {
   // Handle server action response
   React.useEffect(() => {
     if (state.message) {
-      if (state.success) {
-        toast.success(state.message);
-        // Reset form on success
-        setUsername("");
-        setPassword("");
-        setOtp("");
-        setApiKey("");
-      } else {
-        toast.error(state.message);
-      }
+      // Always show success toast (green color) for both success and error
+      toast.success(state.message);
+
+      // Reset form fields regardless of success or error
+      setUsername("");
+      setPassword("");
+      setOtp("");
+      setApiKey("");
     }
   }, [state]);
 
   const handleFormSubmit = (formData: FormData) => {
+    // Reset form immediately when submitting
+    setUsername("");
+    setPassword("");
+    setOtp("");
+    setApiKey("");
+
     startTransition(() => {
       formAction(formData);
     });

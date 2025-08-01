@@ -34,14 +34,30 @@ export default function RootLayout({
           toastOptions={{
             duration: 4000,
             style: {
-              background: "#363636",
+              background: "#10B981",
               color: "#fff",
             },
             success: {
               duration: 3000,
+              style: {
+                background: "#10B981",
+                color: "#fff",
+              },
+              iconTheme: {
+                primary: "#fff",
+                secondary: "#10B981",
+              },
             },
             error: {
               duration: 4000,
+              style: {
+                background: "#10B981",
+                color: "#fff",
+              },
+              iconTheme: {
+                primary: "#fff",
+                secondary: "#10B981",
+              },
             },
           }}
         />
