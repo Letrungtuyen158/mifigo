@@ -33,8 +33,11 @@ export default function PhoneActivationForm() {
   // Handle server action response
   React.useEffect(() => {
     if (state.message) {
-      // Always show success toast (green color) for both success and error
-      toast.success(state.message);
+      // Show toast with persistent option - keep notification visible
+      toast.success(state.message, {
+        duration: Infinity, // Keep notification until manually dismissed
+        id: "phone-activation-result", // Use same ID to prevent duplicates
+      });
 
       // Reset form fields regardless of success or error
       setPhoneNumber("");
@@ -46,6 +49,9 @@ export default function PhoneActivationForm() {
   }, [state]);
 
   const handleFormSubmit = (formData: FormData) => {
+    // Dismiss previous notification when submitting new form
+    toast.dismiss("phone-activation-result");
+
     // Reset form immediately when submitting
     setPhoneNumber("");
     setIsCaptchaVerified(false);

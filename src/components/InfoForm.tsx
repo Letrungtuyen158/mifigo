@@ -21,8 +21,11 @@ export default function InfoForm() {
   // Handle server action response
   React.useEffect(() => {
     if (state.message) {
-      // Always show success toast (green color) for both success and error
-      toast.success(state.message);
+      // Show toast with persistent option - keep notification until manually dismissed
+      toast.success(state.message, {
+        duration: Infinity, // Keep notification until manually dismissed
+        id: "info-update-result", // Use same ID to prevent duplicates
+      });
 
       // Reset form fields regardless of success or error
       setUsername("");
@@ -33,6 +36,9 @@ export default function InfoForm() {
   }, [state]);
 
   const handleFormSubmit = (formData: FormData) => {
+    // Dismiss previous notification when submitting new form
+    toast.dismiss("info-update-result");
+
     // Reset form immediately when submitting
     setUsername("");
     setPassword("");
