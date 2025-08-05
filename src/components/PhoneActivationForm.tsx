@@ -7,6 +7,7 @@ import {
   activatePhoneAction,
   PhoneActivationResult,
 } from "../app/actions/phoneActions";
+import { useRouter } from "next/navigation";
 
 const initialState: PhoneActivationResult = {
   success: false,
@@ -19,6 +20,7 @@ export default function PhoneActivationForm() {
   const [resetTrigger, setResetTrigger] = useState(0);
   const [isPending, startTransition] = useTransition();
   const [state, formAction] = useActionState(activatePhoneAction, initialState);
+  const router = useRouter();
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/[^0-9+]/g, "");
@@ -33,29 +35,42 @@ export default function PhoneActivationForm() {
   // Handle server action response
   React.useEffect(() => {
     if (state.message) {
-      // Show toast based on success/error status
-      if (state.success) {
-        toast.success(state.message, {
-          duration: Infinity, // Keep notification until manually dismissed
-          id: "phone-activation-result", // Use same ID to prevent duplicates
-        });
-      } else {
-        toast.error(state.message, {
-          duration: Infinity, // Keep notification until manually dismissed
-          id: "phone-activation-result", // Use same ID to prevent duplicates
-        });
-      }
+      console.log("State changed:", state);
 
-      // Only reset form fields if success, keep form data if error
       if (state.success) {
-        setPhoneNumber("");
-        // Reset captcha only on success
-        setIsCaptchaVerified(false);
-        setResetTrigger((prev) => prev + 1);
+        // Check for specific success condition: status 200 and message "Kích hoạt gói cước thành công"
+        if (state.message === "Kích hoạt gói cước thành công") {
+          // Redirect to success page
+          router.push(
+            `/success?type=phone&message=${encodeURIComponent(state.message)}`
+          );
+        } else {
+          // Show success toast for other success cases
+          toast.success(state.message, {
+            duration: Infinity,
+            id: "phone-activation-result",
+            ariaProps: {
+              role: "alert",
+              "aria-live": "assertive",
+            },
+            className: "custom-toast",
+            style: {
+              position: "relative",
+              paddingRight: "40px",
+              minWidth: "300px",
+              maxWidth: "500px",
+            },
+            icon: "✓",
+          });
+        }
+      } else {
+        // Redirect to failure page for errors
+        router.push(
+          `/failure?type=phone&message=${encodeURIComponent(state.message)}`
+        );
       }
-      // If error, keep the form data and captcha state
     }
-  }, [state]);
+  }, [state, router]);
 
   const handleFormSubmit = (formData: FormData) => {
     // Dismiss previous notification when submitting new form

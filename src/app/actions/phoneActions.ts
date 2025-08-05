@@ -84,7 +84,15 @@ export async function activatePhoneAction(
     const result = await response.json();
     console.log(result, 3333333333333333);
 
-    if (result.success) {
+    // Check for specific success message
+    if (result.message === "Kích hoạt gói cước thành công") {
+      return {
+        success: true,
+        message: result.message,
+        data: JSON.stringify(result.data),
+      };
+    } else if (result.success) {
+      // Fallback for other success cases
       return {
         success: true,
         message: result.message || "Kích hoạt số điện thoại thành công!",
