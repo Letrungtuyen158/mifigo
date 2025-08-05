@@ -1,4 +1,4 @@
-import PhoneActivationForm from "../components/PhoneActivationForm";
+import MultiSimActivationForm from "../components/MultiSimActivationForm";
 
 export default function Home() {
   return (
@@ -18,7 +18,7 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
           {/* Form - Left Side */}
           <div className="order-1">
-            <PhoneActivationForm />
+            <MultiSimActivationForm />
           </div>
 
           {/* Guide - Right Side */}
@@ -52,11 +52,11 @@ export default function Home() {
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-1">
-                      Enter mobile number (输入手机号码)
+                      Enter mobile numbers (输入手机号码)
                     </h4>
                     <p className="text-gray-600 text-sm">
-                      Enter mobile number on simcard (07612345567 or
-                      +84761234567)
+                      Enter mobile numbers for multiple SIM cards
+                      (输入多张SIM卡的手机号码)
                     </p>
                   </div>
                 </div>
@@ -64,6 +64,21 @@ export default function Home() {
                 <div className="flex items-start space-x-3">
                   <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5">
                     2
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-1">
+                      Add more SIMs (添加更多SIM卡)
+                    </h4>
+                    <p className="text-gray-600 text-sm">
+                      Click "+ Add SIM" to add more SIM cards (点击"+ Add
+                      SIM"添加更多SIM卡)
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3">
+                  <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5">
+                    3
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-1">
@@ -78,30 +93,30 @@ export default function Home() {
 
                 <div className="flex items-start space-x-3">
                   <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5">
-                    3
+                    4
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-1">
                       ACTIVE (立即激活)
                     </h4>
                     <p className="text-gray-600 text-sm">
-                      Click to ACTIVE button to activate data plan
-                      (点击"ACTIVE"按钮激活数据计划)
+                      Click to activate all SIM cards simultaneously
+                      (点击同时激活所有SIM卡)
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-start space-x-3">
                   <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold mt-0.5">
-                    4
+                    5
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-1">
                       Result Information (结果信息)
                     </h4>
                     <p className="text-gray-600 text-sm">
-                      The result will inform you activate data plan successfully
-                      or not (结果将告知您是否成功激活数据计划)
+                      View which SIM cards were activated successfully
+                      (查看哪些SIM卡激活成功)
                     </p>
                   </div>
                 </div>
