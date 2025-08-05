@@ -33,18 +33,27 @@ export default function PhoneActivationForm() {
   // Handle server action response
   React.useEffect(() => {
     if (state.message) {
-      // Show toast with persistent option - keep notification visible
-      toast.success(state.message, {
-        duration: Infinity, // Keep notification until manually dismissed
-        id: "phone-activation-result", // Use same ID to prevent duplicates
-      });
+      // Show toast based on success/error status
+      if (state.success) {
+        toast.success(state.message, {
+          duration: Infinity, // Keep notification until manually dismissed
+          id: "phone-activation-result", // Use same ID to prevent duplicates
+        });
+      } else {
+        toast.error(state.message, {
+          duration: Infinity, // Keep notification until manually dismissed
+          id: "phone-activation-result", // Use same ID to prevent duplicates
+        });
+      }
 
-      // Reset form fields regardless of success or error
-      setPhoneNumber("");
-
-      // Reset captcha sau khi submit (dù thành công hay thất bại)
-      setIsCaptchaVerified(false);
-      setResetTrigger((prev) => prev + 1);
+      // Only reset form fields if success, keep form data if error
+      if (state.success) {
+        setPhoneNumber("");
+        // Reset captcha only on success
+        setIsCaptchaVerified(false);
+        setResetTrigger((prev) => prev + 1);
+      }
+      // If error, keep the form data and captcha state
     }
   }, [state]);
 

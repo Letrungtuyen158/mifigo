@@ -36,12 +36,14 @@ export default function RootLayout({
             style: {
               background: "#10B981",
               color: "#fff",
+              borderRadius: "10px",
             },
             success: {
               duration: 3000,
               style: {
                 background: "#10B981",
                 color: "#fff",
+                borderRadius: "10px",
               },
               iconTheme: {
                 primary: "#fff",
@@ -51,12 +53,13 @@ export default function RootLayout({
             error: {
               duration: 4000,
               style: {
-                background: "#10B981",
+                background: "#EF4444",
                 color: "#fff",
+                borderRadius: "10px",
               },
               iconTheme: {
                 primary: "#fff",
-                secondary: "#10B981",
+                secondary: "#EF4444",
               },
             },
           }}

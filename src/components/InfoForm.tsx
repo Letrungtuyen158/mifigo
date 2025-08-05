@@ -21,17 +21,27 @@ export default function InfoForm() {
   // Handle server action response
   React.useEffect(() => {
     if (state.message) {
-      // Show toast with persistent option - keep notification until manually dismissed
-      toast.success(state.message, {
-        duration: Infinity, // Keep notification until manually dismissed
-        id: "info-update-result", // Use same ID to prevent duplicates
-      });
+      // Show toast based on success/error status
+      if (state.success) {
+        toast.success(state.message, {
+          duration: Infinity, // Keep notification until manually dismissed
+          id: "info-update-result", // Use same ID to prevent duplicates
+        });
+      } else {
+        toast.error(state.message, {
+          duration: Infinity, // Keep notification until manually dismissed
+          id: "info-update-result", // Use same ID to prevent duplicates
+        });
+      }
 
-      // Reset form fields regardless of success or error
-      setUsername("");
-      setPassword("");
-      setOtp("");
-      setApiKey("");
+      // Only reset form fields if success, keep form data if error
+      if (state.success) {
+        setUsername("");
+        setPassword("");
+        setOtp("");
+        setApiKey("");
+      }
+      // If error, keep the form data
     }
   }, [state]);
 
