@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kích hoạt số điện thoại",
-  description: "Ứng dụng kích hoạt số điện thoại với xác minh captcha",
+  title: "mifigo",
+  description: "mifigo",
 };
 
 export default function RootLayout({
