@@ -68,7 +68,7 @@ export default function InfoPage() {
       <div className="flex-shrink-0 text-center py-3 px-4">
         <div className="bg-white/80 backdrop-blur-sm rounded-lg p-3 shadow-sm border border-gray-200/50 max-w-sm mx-auto">
           <p className="text-xs sm:text-sm font-medium text-gray-700">
-            🛡️ Mifigo Admin Panel v1.0
+            🛡️ Admin Panel v1.0
           </p>
           <p className="text-xs text-gray-500 mt-1">
             Được bảo vệ bởi Server Actions & End-to-End Encryption

@@ -6,7 +6,7 @@ export default function Home() {
       {/* Header */}
       <div className="text-center mb-8 lg:mb-12">
         <h1 className="text-4xl lg:text-5xl font-black text-gray-900 mb-4 tracking-tight">
-          Mifigo Active Data Plan (开通5G套餐)
+           Active Data Plan (开通5G套餐)
         </h1>
         <p className="text-lg lg:text-xl font-medium text-gray-700 mb-6">
           Make simple life for travelling (让旅行生活更简单)
