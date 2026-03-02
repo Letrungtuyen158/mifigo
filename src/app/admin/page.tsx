@@ -11,6 +11,7 @@ import {
   markPhoneNumberSold,
   loginUser,
   createSim,
+  updateSim,
   deleteSim,
   type SimWritePayload,
   type PhoneNumberItem,
