@@ -13,6 +13,7 @@ import {
   createSim,
   updateSim,
   deleteSim,
+  downloadSimImportTemplate,
   type SimWritePayload,
   type PhoneNumberItem,
   type PhoneStatus,
@@ -47,6 +48,10 @@ export default function AdminPage() {
 
   const [activeTab, setActiveTab] = useState<AdminTab>("all");
   const [search, setSearch] = useState("");
+  const [carrierFilter, setCarrierFilter] = useState("");
+  const [simTypeFilter, setSimTypeFilter] = useState<"all" | "prepaid" | "postpaid">("all");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
 
   const [state, setState] = useState<PageState>({
     items: [],
@@ -114,6 +119,13 @@ export default function AdminPage() {
         filters: {
           status: statusFilter,
           last4: keyword || undefined,
+          carrier: carrierFilter || undefined,
+          simType:
+            simTypeFilter === "all"
+              ? undefined
+              : (simTypeFilter as "prepaid" | "postpaid"),
+          minPrice: minPrice ? Number(minPrice) || undefined : undefined,
+          maxPrice: maxPrice ? Number(maxPrice) || undefined : undefined,
         },
       }),
       fetchPhoneStats(
@@ -322,12 +334,12 @@ export default function AdminPage() {
           <section className="space-y-5">
             <div className="grid gap-4 md:grid-cols-4">
               <StatCard
-                label="Available"
+                label="Đang trống"
                 value={stats?.available ?? 0}
                 color="emerald"
               />
               <StatCard
-                label="Reserved"
+                label="Giữ chỗ"
                 value={stats?.reserved ?? 0}
                 color="amber"
                 subtitle={
@@ -339,7 +351,7 @@ export default function AdminPage() {
                 }
               />
               <StatCard
-                label="Sold"
+                label="Đã bán"
                 value={stats?.sold ?? 0}
                 color="slate"
               />
@@ -350,6 +362,26 @@ export default function AdminPage() {
                   className="rounded-full border border-slate-200 px-4 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
                 >
                   Thêm SIM mới
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    requireLogin(async () => {
+                      try {
+                        await downloadSimImportTemplate();
+                      } catch (error) {
+                        console.error(error);
+                        toast.error(
+                          error instanceof Error
+                            ? error.message
+                            : "Không thể tải file mẫu. Vui lòng thử lại."
+                        );
+                      }
+                    })
+                  }
+                  className="hidden rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 md:inline-flex"
+                >
+                  Tải file mẫu
                 </button>
                 <label className="relative inline-flex cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">
                   <span>Import Excel</span>
@@ -380,40 +412,78 @@ export default function AdminPage() {
                     onClick={() => handleChangeTab("all")}
                   />
                   <AdminTabButton
-                    label="Available"
+                    label="Đang trống"
                     value="available"
                     active={activeTab === "available"}
                     onClick={() => handleChangeTab("available")}
                   />
                   <AdminTabButton
-                    label="Reserved"
+                    label="Giữ chỗ"
                     value="reserved"
                     active={activeTab === "reserved"}
                     onClick={() => handleChangeTab("reserved")}
                   />
                   <AdminTabButton
-                    label="Sold"
+                    label="Đã bán"
                     value="sold"
                     active={activeTab === "sold"}
                     onClick={() => handleChangeTab("sold")}
                   />
                 </div>
 
-                <div className="flex w-full items-center gap-2 md:w-auto">
+                <div className="grid w-full gap-2 md:w-auto md:grid-cols-4">
                   <input
                     type="text"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Tìm theo 4 số cuối..."
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none ring-slate-900/10 placeholder:text-slate-400 focus:bg-white focus:ring-2 md:w-56"
+                    placeholder="Tìm 4 số cuối..."
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none ring-slate-900/10 placeholder:text-slate-400 focus:bg-white focus:ring-2"
                   />
-                  <button
-                    type="button"
-                    onClick={handleSearch}
-                    className="inline-flex items-center rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-black"
+                  <input
+                    type="text"
+                    value={carrierFilter}
+                    onChange={(e) => setCarrierFilter(e.target.value)}
+                    placeholder="Nhà mạng"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none ring-slate-900/10 placeholder:text-slate-400 focus:bg-white focus:ring-2"
+                  />
+                  <select
+                    value={simTypeFilter}
+                    onChange={(e) =>
+                      setSimTypeFilter(
+                        e.target.value as "all" | "prepaid" | "postpaid"
+                      )
+                    }
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none ring-slate-900/10 focus:bg-white focus:ring-2"
                   >
-                    Tìm
-                  </button>
+                    <option value="all">Loại sim</option>
+                    <option value="prepaid">Trả trước</option>
+                    <option value="postpaid">Trả sau</option>
+                  </select>
+                  <div className="flex gap-1">
+                    <input
+                      type="number"
+                      min={0}
+                      value={minPrice}
+                      onChange={(e) => setMinPrice(e.target.value)}
+                      placeholder="Giá từ"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-xs text-slate-900 outline-none ring-slate-900/10 placeholder:text-slate-400 focus:bg-white focus:ring-2"
+                    />
+                    <input
+                      type="number"
+                      min={0}
+                      value={maxPrice}
+                      onChange={(e) => setMaxPrice(e.target.value)}
+                      placeholder="đến"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-xs text-slate-900 outline-none ring-slate-900/10 placeholder:text-slate-400 focus:bg-white focus:ring-2"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSearch}
+                      className="inline-flex items-center rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-black"
+                    >
+                      Tìm
+                    </button>
+                  </div>
                 </div>
               </div>
 

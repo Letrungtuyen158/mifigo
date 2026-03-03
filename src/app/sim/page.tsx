@@ -37,14 +37,22 @@ export default function SimPage() {
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
   const [authTab, setAuthTab] = useState<"register" | "login">("register");
+  const ALLOWED_PREFIXES = ["090", "093", "076", "078"] as const;
+
   const [filters, setFilters] = useState<{
-    prefix: string;
+    prefixes: string[];
     last4: string;
-    status: PhoneStatus | "all";
+    carrier: string;
+    simType: "all" | "prepaid" | "postpaid";
+    minPrice: string;
+    maxPrice: string;
   }>({
-    prefix: "",
+    prefixes: [],
     last4: "",
-    status: "all",
+    carrier: "",
+    simType: "all",
+    minPrice: "",
+    maxPrice: "",
   });
 
   const [state, setState] = useState<PhonePageState>({
@@ -85,9 +93,12 @@ export default function SimPage() {
   async function loadPage(
     page: number,
     currentFilters: {
-      prefix: string;
+      prefixes: string[];
       last4: string;
-      status: PhoneStatus | "all";
+      carrier: string;
+      simType: "all" | "prepaid" | "postpaid";
+      minPrice: string;
+      maxPrice: string;
     }
   ) {
     setState((prev) => ({ ...prev, isLoading: true }));
@@ -95,12 +106,24 @@ export default function SimPage() {
       page,
       pageSize: PAGE_SIZE,
       filters: {
-        prefix: currentFilters.prefix || undefined,
+        prefix:
+          currentFilters.prefixes && currentFilters.prefixes.length > 0
+            ? currentFilters.prefixes.join(",")
+            : undefined,
         last4: currentFilters.last4 || undefined,
-        status:
-          currentFilters.status === "all"
-            ? "available"
-            : (currentFilters.status as PhoneStatus),
+        carrier: currentFilters.carrier || undefined,
+        simType:
+          currentFilters.simType === "all"
+            ? undefined
+            : currentFilters.simType === "prepaid" || currentFilters.simType === "postpaid"
+            ? currentFilters.simType
+            : undefined,
+        minPrice: currentFilters.minPrice
+          ? Number(currentFilters.minPrice) || undefined
+          : undefined,
+        maxPrice: currentFilters.maxPrice
+          ? Number(currentFilters.maxPrice) || undefined
+          : undefined,
       },
     });
     setState({
@@ -131,9 +154,12 @@ export default function SimPage() {
 
   function handleClearFilters() {
     const reset = {
-      prefix: "",
+      prefixes: [],
       last4: "",
-      status: "all" as const,
+      carrier: "",
+      simType: "all" as const,
+      minPrice: "",
+      maxPrice: "",
     };
     setFilters(reset);
     void loadPage(1, reset);
@@ -369,48 +395,43 @@ export default function SimPage() {
 
       <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 lg:flex-row lg:px-6 lg:py-8">
         <section className="flex-1 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100 lg:p-6">
-          <div className="flex flex-col gap-4 border-b border-slate-100 pb-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <h2 className="text-base font-semibold text-slate-900 lg:text-lg">
-                Danh sách số (20.000+ số)
-              </h2>
-              <p className="mt-1 text-xs text-slate-500 lg:text-sm">
-                Phân trang, lazy load. Bấm &quot;Mua&quot; để thêm số vào giỏ thanh toán.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3 text-xs text-slate-500 lg:text-sm">
-              <div className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-3 py-1">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                <span>Available</span>
-              </div>
-              <div className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-3 py-1">
-                <span className="h-2 w-2 rounded-full bg-amber-500" />
-                <span>Reserved 24h</span>
-              </div>
-              <div className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-3 py-1">
-                <span className="h-2 w-2 rounded-full bg-slate-400" />
-                <span>Sold</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50/70 p-3 lg:p-4">
-            <div className="grid gap-3 md:grid-cols-4">
-              <div className="md:col-span-1">
+          <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3 lg:p-4 mt-1">
+            <div className="grid gap-3 md:grid-cols-2">
+              <div>
               <label className="block text-xs font-medium text-slate-700">
                 Lọc theo đầu số
               </label>
-              <input
-                type="text"
-                placeholder="VD: 090, 091, 098..."
-                value={filters.prefix}
-                onChange={(e) =>
-                  setFilters((prev) => ({ ...prev, prefix: e.target.value }))
-                }
-                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500/20 placeholder:text-slate-400 focus:ring-2"
-              />
+              <div className="mt-1 flex flex-wrap gap-2">
+                {ALLOWED_PREFIXES.map((p) => {
+                  const active = filters.prefixes.includes(p);
+                  return (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() =>
+                        setFilters((prev) => {
+                          const exists = prev.prefixes.includes(p);
+                          return {
+                            ...prev,
+                            prefixes: exists
+                              ? prev.prefixes.filter((v) => v !== p)
+                              : [...prev.prefixes, p],
+                          };
+                        })
+                      }
+                      className={
+                        active
+                          ? "rounded-xl bg-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-600"
+                          : "rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-50"
+                      }
+                    >
+                      {p}
+                    </button>
+                  );
+                })}
               </div>
-              <div className="md:col-span-1">
+              </div>
+              <div>
               <label className="block text-xs font-medium text-slate-700">
                 Tìm theo 4 số cuối
               </label>
@@ -425,27 +446,68 @@ export default function SimPage() {
                 className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500/20 placeholder:text-slate-400 focus:ring-2"
               />
               </div>
-              <div className="md:col-span-1">
+              <div>
               <label className="block text-xs font-medium text-slate-700">
-                Trạng thái
+                Nhà mạng
+              </label>
+              <input
+                type="text"
+                placeholder="VD: Viettel"
+                value={filters.carrier}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, carrier: e.target.value }))
+                }
+                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500/20 placeholder:text-slate-400 focus:ring-2"
+              />
+              </div>
+              <div>
+              <label className="block text-xs font-medium text-slate-700">
+                Loại sim
               </label>
               <select
-                value={filters.status}
+                value={filters.simType}
                 onChange={(e) =>
                   setFilters((prev) => ({
                     ...prev,
-                    status: e.target.value as PhoneStatus | "all",
+                    simType: e.target.value as "all" | "prepaid" | "postpaid",
                   }))
                 }
-                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-emerald-500/20 focus:ring-2"
+                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500/20 focus:ring-2"
               >
                 <option value="all">Tất cả</option>
-                <option value="available">Available</option>
-                <option value="reserved">Reserved</option>
-                <option value="sold">Sold</option>
+                <option value="prepaid">Trả trước</option>
+                <option value="postpaid">Trả sau</option>
               </select>
               </div>
-              <div className="md:col-span-1 flex items-end justify-end gap-2">
+              <div>
+              <label className="block text-xs font-medium text-slate-700">
+                Giá từ (VNĐ)
+              </label>
+              <input
+                type="number"
+                min={0}
+                value={filters.minPrice}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, minPrice: e.target.value }))
+                }
+                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500/20 placeholder:text-slate-400 focus:ring-2"
+              />
+              </div>
+              <div>
+              <label className="block text-xs font-medium text-slate-700">
+                Giá đến (VNĐ)
+              </label>
+              <input
+                type="number"
+                min={0}
+                value={filters.maxPrice}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, maxPrice: e.target.value }))
+                }
+                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500/20 placeholder:text-slate-400 focus:ring-2"
+              />
+              </div>
+              <div className="md:col-span-2 flex items-end justify-end gap-2">
                 <button
                   type="button"
                   onClick={handleClearFilters}

@@ -12,6 +12,10 @@ export interface PhoneFilters {
   prefix?: string;
   last4?: string;
   status?: PhoneStatus;
+  carrier?: string;
+  simType?: "prepaid" | "postpaid";
+  minPrice?: number;
+  maxPrice?: number;
 }
 
 export interface SimWritePayload {
@@ -19,6 +23,7 @@ export interface SimWritePayload {
   price?: number;
   carrier?: string;
   note?: string;
+  simType?: "prepaid" | "postpaid";
 }
 
 export interface PaginatedPhoneResponse {
@@ -178,8 +183,24 @@ export async function fetchPhoneNumbers(params: {
     limit: pageSize,
   };
 
+  if (filters?.prefix) {
+    query.prefix = filters.prefix;
+  }
   if (filters?.last4) {
-    query.last4 = filters.last4;
+    // BE dùng param `search` cho 4 số cuối / chuỗi tìm kiếm
+    query.search = filters.last4;
+  }
+  if (filters?.carrier) {
+    query.carrier = filters.carrier;
+  }
+  if (filters?.simType) {
+    query.simType = filters.simType;
+  }
+  if (filters?.minPrice !== undefined) {
+    query.minPrice = filters.minPrice;
+  }
+  if (filters?.maxPrice !== undefined) {
+    query.maxPrice = filters.maxPrice;
   }
 
   if (filters?.status) {
@@ -205,14 +226,8 @@ export async function fetchPhoneNumbers(params: {
     total: items.length,
   };
 
-  // Áp dụng filter prefix phía FE (BE chưa hỗ trợ prefix)
-  const filteredItems =
-    filters?.prefix && filters.prefix.trim()
-      ? items.filter((item) => item.number.startsWith(filters.prefix!))
-      : items;
-
   return {
-    items: filteredItems,
+    items,
     page: pagination.page,
     pageSize: pagination.limit,
     total: pagination.total,
@@ -321,6 +336,43 @@ export async function importSimsJson(
     imported: res.imported ?? 0,
     errors: res.errors,
   };
+}
+
+export async function downloadSimImportTemplate(): Promise<void> {
+  const token = getAuthToken();
+  const headers = new Headers();
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  const res = await fetch(`${API_BASE_URL}/sim/import/template`, {
+    method: "GET",
+    headers,
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    let message = `Request failed with status ${res.status}`;
+    try {
+      const body = (await res.json()) as { message?: string };
+      if (body && body.message) message = body.message;
+    } catch {
+      // ignore
+    }
+    throw new Error(message);
+  }
+
+  if (typeof window === "undefined") return;
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "mau_import_sim.xlsx";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 export async function fetchPhoneStats(
