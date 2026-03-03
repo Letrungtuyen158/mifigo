@@ -332,7 +332,7 @@ export default function AdminPage() {
           </div>
         ) : (
           <section className="space-y-5">
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-3">
               <StatCard
                 label="Đang trống"
                 value={stats?.available ?? 0}
@@ -355,56 +355,57 @@ export default function AdminPage() {
                 value={stats?.sold ?? 0}
                 color="slate"
               />
-              <div className="flex items-center justify-end gap-3 md:justify-end">
-                <button
-                  type="button"
-                  onClick={() => requireLogin(() => setShowCreateSim(true))}
-                  className="rounded-full border border-slate-200 px-4 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
-                >
-                  Thêm SIM mới
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    requireLogin(async () => {
-                      try {
-                        await downloadSimImportTemplate();
-                      } catch (error) {
-                        console.error(error);
-                        toast.error(
-                          error instanceof Error
-                            ? error.message
-                            : "Không thể tải file mẫu. Vui lòng thử lại."
-                        );
-                      }
-                    })
-                  }
-                  className="hidden rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 md:inline-flex"
-                >
-                  Tải file mẫu
-                </button>
-                <label className="relative inline-flex cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">
-                  <span>Import Excel</span>
-                  <input
-                    type="file"
-                    accept=".xlsx,.xls,.csv"
-                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                    onChange={(e) => requireLogin(() => void handleImport(e))}
-                  />
-                </label>
-                <button
-                  type="button"
-                  onClick={() => requireLogin(() => void handleExport())}
-                  className="rounded-full bg-slate-900 px-4 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-black"
-                >
-                  Export danh sách
-                </button>
-              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => requireLogin(() => setShowCreateSim(true))}
+                className="rounded-full border border-slate-200 px-4 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+              >
+                Thêm SIM mới
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  requireLogin(async () => {
+                    try {
+                      await downloadSimImportTemplate();
+                    } catch (error) {
+                      console.error(error);
+                      toast.error(
+                        error instanceof Error
+                          ? error.message
+                          : "Không thể tải file mẫu. Vui lòng thử lại."
+                      );
+                    }
+                  })
+                }
+                className="hidden rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 md:inline-flex"
+              >
+                Tải file mẫu
+              </button>
+              <label className="relative inline-flex cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">
+                <span>Import Excel</span>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                  onChange={(e) => requireLogin(() => void handleImport(e))}
+                />
+              </label>
+              <button
+                type="button"
+                onClick={() => requireLogin(() => void handleExport())}
+                className="rounded-full bg-slate-900 px-4 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-black"
+              >
+                Export danh sách
+              </button>
             </div>
 
             <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100 lg:p-5">
-              <div className="flex flex-col gap-3 border-b border-slate-100 pb-4 md:flex-row md:items-center md:justify-between">
-                <div className="flex gap-2 rounded-full bg-slate-50 p-1 text-xs font-medium text-slate-600">
+              <div className="border-b border-slate-100 pb-4">
+                <div className="flex flex-wrap gap-2 rounded-full bg-slate-50 p-1 text-xs font-medium text-slate-600">
                   <AdminTabButton
                     label="Tất cả"
                     value="all"
@@ -430,8 +431,7 @@ export default function AdminPage() {
                     onClick={() => handleChangeTab("sold")}
                   />
                 </div>
-
-                <div className="grid w-full gap-2 md:w-auto md:grid-cols-4">
+                <div className="mt-3 grid w-full gap-2 md:grid-cols-4">
                   <input
                     type="text"
                     value={search}
