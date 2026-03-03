@@ -6,6 +6,10 @@ export interface PhoneNumberItem {
   status: PhoneStatus;
   reservedUntil?: string;
   reservedByUserId?: string;
+  price?: number;
+  carrier?: string;
+  note?: string;
+  simType?: "prepaid" | "postpaid" | null;
 }
 
 export interface PhoneFilters {
@@ -231,6 +235,15 @@ function mapSimToPhoneNumberItem(sim: any): PhoneNumberItem {
       ? new Date(sim.reservedExpiresAt).toISOString()
       : undefined,
     reservedByUserId: sim.reservedBy ? String(sim.reservedBy) : undefined,
+    price:
+      typeof sim.price === "number"
+        ? sim.price
+        : sim.price
+        ? Number(sim.price)
+        : undefined,
+    carrier: sim.carrier || undefined,
+    note: sim.note || undefined,
+    simType: sim.simType || null,
   };
 }
 

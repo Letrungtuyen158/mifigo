@@ -36,6 +36,18 @@ interface PageState {
 }
 
 const PAGE_SIZE = 50;
+const CARRIERS = [
+  "Viettel",
+  "MobiFone",
+  "VinaPhone",
+  "Vietnamobile",
+  "Gmobile",
+  "iTel",
+  "Reddi (Wintel)",
+  "Digitel",
+  "FPT",
+  "CMC",
+] as const;
 const MOCK_ADMIN: AdminUser = {
   id: "admin-1",
   name: "Super Admin",
@@ -75,11 +87,18 @@ export default function AdminPage() {
     price: 0,
     carrier: "",
     note: "",
+    simType: undefined,
   });
   const [isSavingSim, setIsSavingSim] = useState(false);
   const [editingSim, setEditingSim] = useState<PhoneNumberItem | null>(null);
   const [editingPhoneNumber, setEditingPhoneNumber] = useState("");
   const [editingStatus, setEditingStatus] = useState<PhoneStatus>("available");
+  const [editingPrice, setEditingPrice] = useState<number | undefined>(undefined);
+  const [editingCarrier, setEditingCarrier] = useState("");
+  const [editingNote, setEditingNote] = useState("");
+  const [editingSimType, setEditingSimType] = useState<
+    "prepaid" | "postpaid" | "none"
+  >("none");
   const [isUpdatingSim, setIsUpdatingSim] = useState(false);
   const [pendingOrderCount, setPendingOrderCount] = useState(0);
 
@@ -462,13 +481,18 @@ export default function AdminPage() {
                     placeholder="Tìm 4 số cuối..."
                     className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none ring-slate-900/10 placeholder:text-slate-400 focus:bg-white focus:ring-2"
                   />
-                  <input
-                    type="text"
+                  <select
                     value={carrierFilter}
                     onChange={(e) => setCarrierFilter(e.target.value)}
-                    placeholder="Nhà mạng"
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none ring-slate-900/10 placeholder:text-slate-400 focus:bg-white focus:ring-2"
-                  />
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none ring-slate-900/10 focus:bg-white focus:ring-2"
+                  >
+                    <option value="">Nhà mạng</option>
+                    {CARRIERS.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
                   <select
                     value={simTypeFilter}
                     onChange={(e) =>
@@ -519,7 +543,16 @@ export default function AdminPage() {
                           Số
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          Giá (VNĐ)
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          Nhà mạng
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                           Trạng thái
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          Loại sim
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                           Hết hạn giữ
@@ -554,8 +587,23 @@ export default function AdminPage() {
                             <td className="whitespace-nowrap px-4 py-3 font-medium text-slate-900">
                               {item.number}
                             </td>
+                            <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-700">
+                              {item.price != null
+                                ? item.price.toLocaleString("vi-VN")
+                                : "-"}
+                            </td>
+                            <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-700">
+                              {item.carrier || "-"}
+                            </td>
                             <td className="whitespace-nowrap px-4 py-3">
                               <StatusBadge item={item} />
+                            </td>
+                            <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-700">
+                              {item.simType === "prepaid"
+                                ? "Trả trước"
+                                : item.simType === "postpaid"
+                                ? "Trả sau"
+                                : "-"}
                             </td>
                             <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-500">
                               {item.reservedUntil
@@ -574,6 +622,16 @@ export default function AdminPage() {
                                       setEditingSim(item);
                                       setEditingPhoneNumber(item.number);
                                       setEditingStatus(item.status);
+                                      setEditingPrice(item.price);
+                                      setEditingCarrier(item.carrier || "");
+                                      setEditingNote(item.note || "");
+                                      setEditingSimType(
+                                        item.simType === "prepaid"
+                                          ? "prepaid"
+                                          : item.simType === "postpaid"
+                                          ? "postpaid"
+                                          : "none"
+                                      );
                                     })
                                   }
                                 >
@@ -771,20 +829,85 @@ export default function AdminPage() {
                   className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none ring-slate-900/10 placeholder:text-slate-400 focus:ring-2"
                 />
               </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-medium text-slate-700">
+                    Giá (VNĐ)
+                  </label>
+                  <input
+                    type="number"
+                    value={editingPrice ?? 0}
+                    onChange={(e) =>
+                      setEditingPrice(
+                        e.target.value ? Number(e.target.value) : undefined
+                      )
+                    }
+                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none ring-slate-900/10 placeholder:text-slate-400 focus:ring-2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700">
+                    Nhà mạng
+                  </label>
+                  <select
+                    value={editingCarrier}
+                    onChange={(e) => setEditingCarrier(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-slate-900/10 focus:ring-2"
+                  >
+                    <option value="">Không đặt</option>
+                    {CARRIERS.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-medium text-slate-700">
+                    Trạng thái
+                  </label>
+                  <select
+                    value={editingStatus}
+                    onChange={(e) =>
+                      setEditingStatus(e.target.value as PhoneStatus)
+                    }
+                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-slate-900/10 focus:ring-2"
+                  >
+                    <option value="available">Đang trống</option>
+                    <option value="sold">Đã bán</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700">
+                    Loại sim
+                  </label>
+                  <select
+                    value={editingSimType}
+                    onChange={(e) =>
+                      setEditingSimType(
+                        e.target.value as "prepaid" | "postpaid" | "none"
+                      )
+                    }
+                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-slate-900/10 focus:ring-2"
+                  >
+                    <option value="none">Không đặt</option>
+                    <option value="prepaid">Trả trước</option>
+                    <option value="postpaid">Trả sau</option>
+                  </select>
+                </div>
+              </div>
               <div>
                 <label className="block text-xs font-medium text-slate-700">
-                  Trạng thái
+                  Ghi chú
                 </label>
-                <select
-                  value={editingStatus}
-                  onChange={(e) =>
-                    setEditingStatus(e.target.value as PhoneStatus)
-                  }
-                  className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-slate-900/10 focus:ring-2"
-                >
-                  <option value="available">Available</option>
-                  <option value="sold">Sold</option>
-                </select>
+                <textarea
+                  rows={2}
+                  value={editingNote}
+                  onChange={(e) => setEditingNote(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none ring-slate-900/10 placeholder:text-slate-400 focus:ring-2"
+                />
               </div>
               <button
                 type="button"
@@ -804,6 +927,13 @@ export default function AdminPage() {
                           editingStatus === "reserved"
                             ? "available"
                             : editingStatus,
+                        price: editingPrice,
+                        carrier: editingCarrier || undefined,
+                        note: editingNote || undefined,
+                        simType:
+                          editingSimType === "none"
+                            ? undefined
+                            : (editingSimType as "prepaid" | "postpaid"),
                       });
                       setState((prev) => ({
                         ...prev,
@@ -908,19 +1038,42 @@ export default function AdminPage() {
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-700">
-                  Ghi chú
-                </label>
-                <textarea
-                  rows={2}
-                  value={newSim.note ?? ""}
-                  onChange={(e) =>
-                    setNewSim((prev) => ({ ...prev, note: e.target.value }))
-                  }
-                  placeholder="Mô tả ngắn, loại số đẹp..."
-                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none ring-slate-900/10 placeholder:text-slate-400 focus:ring-2"
-                />
+              <div className="grid gap-3 md:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-medium text-slate-700">
+                    Loại sim
+                  </label>
+                  <select
+                    value={newSim.simType ?? ""}
+                    onChange={(e) =>
+                      setNewSim((prev) => ({
+                        ...prev,
+                        simType: e.target.value
+                          ? (e.target.value as "prepaid" | "postpaid")
+                          : undefined,
+                      }))
+                    }
+                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-slate-900/10 focus:ring-2"
+                  >
+                    <option value="">Không đặt</option>
+                    <option value="prepaid">Trả trước</option>
+                    <option value="postpaid">Trả sau</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700">
+                    Ghi chú
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={newSim.note ?? ""}
+                    onChange={(e) =>
+                      setNewSim((prev) => ({ ...prev, note: e.target.value }))
+                    }
+                    placeholder="Mô tả ngắn, loại số đẹp..."
+                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none ring-slate-900/10 placeholder:text-slate-400 focus:ring-2"
+                  />
+                </div>
               </div>
               <button
                 type="button"
@@ -946,6 +1099,7 @@ export default function AdminPage() {
                         price: 0,
                         carrier: "",
                         note: "",
+                        simType: undefined,
                       });
                     } catch (error) {
                       console.error(error);

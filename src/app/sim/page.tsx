@@ -40,6 +40,18 @@ export default function SimPage() {
   const [authPassword, setAuthPassword] = useState("");
   const [authTab, setAuthTab] = useState<"register" | "login">("register");
   const ALLOWED_PREFIXES = ["090", "093", "076", "078"] as const;
+  const CARRIERS = [
+    "Viettel",
+    "MobiFone",
+    "VinaPhone",
+    "Vietnamobile",
+    "Gmobile",
+    "iTel",
+    "Reddi (Wintel)",
+    "Digitel",
+    "FPT",
+    "CMC",
+  ] as const;
 
   const [filters, setFilters] = useState<{
     prefixes: string[];
@@ -471,15 +483,20 @@ export default function SimPage() {
               <label className="block text-xs font-medium text-slate-700">
                 Nhà mạng
               </label>
-              <input
-                type="text"
-                placeholder="VD: Viettel"
+              <select
                 value={filters.carrier}
                 onChange={(e) =>
                   setFilters((prev) => ({ ...prev, carrier: e.target.value }))
                 }
-                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500/20 placeholder:text-slate-400 focus:ring-2"
-              />
+                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500/20 focus:ring-2"
+              >
+                <option value="">Tất cả nhà mạng</option>
+                {CARRIERS.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
               </div>
               <div>
               <label className="block text-xs font-medium text-slate-700">
@@ -555,6 +572,15 @@ export default function SimPage() {
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Số
                     </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Giá (VNĐ)
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Nhà mạng
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Loại sim
+                    </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Thao tác
                     </th>
@@ -564,7 +590,7 @@ export default function SimPage() {
                   {state.isLoading ? (
                     <tr>
                       <td
-                        colSpan={4}
+                        colSpan={5}
                         className="px-4 py-12 text-center text-sm text-slate-500"
                       >
                         Đang tải dữ liệu số...
@@ -573,7 +599,7 @@ export default function SimPage() {
                   ) : state.items.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={4}
+                        colSpan={5}
                         className="px-4 py-12 text-center text-sm text-slate-500"
                       >
                         Không tìm thấy số phù hợp. Vui lòng thử bộ lọc khác.
@@ -584,6 +610,21 @@ export default function SimPage() {
                       <tr key={item.id} className="hover:bg-slate-50/70">
                         <td className="whitespace-nowrap px-4 py-3 font-medium text-slate-900">
                           {item.number}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-700">
+                          {item.price != null
+                            ? item.price.toLocaleString("vi-VN")
+                            : "-"}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-700">
+                          {item.carrier || "-"}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-700">
+                          {item.simType === "prepaid"
+                            ? "Trả trước"
+                            : item.simType === "postpaid"
+                            ? "Trả sau"
+                            : "-"}
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-right">
                           <button
