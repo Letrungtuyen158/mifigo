@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import {
@@ -9,6 +10,7 @@ import {
   registerUser,
   verifyEmail,
   loginUser,
+  fetchPublicSettings,
   type PhoneNumberItem,
   type PhoneStatus,
 } from "@/lib/phoneSim";
@@ -71,6 +73,7 @@ export default function SimPage() {
     () => Math.max(1, Math.ceil(state.total / state.pageSize)),
     [state.total, state.pageSize]
   );
+  const [logoUrl, setLogoUrl] = useState<string>("");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -83,6 +86,17 @@ export default function SimPage() {
         window.localStorage.removeItem("sim_user");
       }
     }
+  }, []);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const settings = await fetchPublicSettings();
+        setLogoUrl(settings.logo);
+      } catch {
+        setLogoUrl("");
+      }
+    })();
   }, []);
 
   useEffect(() => {
@@ -318,13 +332,20 @@ export default function SimPage() {
     <div className="min-h-screen bg-slate-50">
       <header className="border-b bg-white/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 lg:px-6">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 lg:text-2xl">
-              Chọn số &amp; mua số đẹp
-            </h1>
-            <p className="mt-1 text-sm text-slate-500 lg:text-base">
-              Tìm kiếm, lọc và thêm số vào giỏ. Thanh toán sau khi chuyển khoản.
-            </p>
+          <div className="flex items-center gap-3">
+            {logoUrl ? (
+              <Image
+                src={logoUrl}
+                alt="Logo"
+                width={140}
+                height={40}
+                className="h-10 w-auto object-contain"
+              />
+            ) : (
+              <h1 className="text-xl font-bold tracking-tight text-slate-900 lg:text-2xl">
+                Chọn số &amp; mua số đẹp
+              </h1>
+            )}
           </div>
           <div className="flex items-center gap-3">
             <button

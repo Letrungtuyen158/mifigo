@@ -18,12 +18,97 @@ export interface PhoneFilters {
   maxPrice?: number;
 }
 
+export interface PublicSettings {
+  logo: string;
+}
+
 export interface SimWritePayload {
   phoneNumber: string;
   price?: number;
   carrier?: string;
   note?: string;
   simType?: "prepaid" | "postpaid";
+}
+
+export async function fetchPublicSettings(): Promise<PublicSettings> {
+  type BackendResponse = {
+    success: boolean;
+    data: {
+      logo?: string;
+    };
+  };
+
+  const res = await fetch(`${API_BASE_URL}/settings/public`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to load settings (${res.status})`);
+  }
+
+  const body = (await res.json()) as BackendResponse;
+  return {
+    logo: body.data?.logo || "",
+  };
+}
+
+export async function updateLogo(options: {
+  file?: File | null;
+  clear?: boolean;
+}): Promise<PublicSettings> {
+  const token = getAuthToken();
+  const headers = new Headers();
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  let body: BodyInit;
+
+  if (options.file) {
+    const formData = new FormData();
+    formData.append("logo", options.file);
+    body = formData;
+  } else {
+    const formData = new FormData();
+    if (options.clear) {
+      formData.append("clearLogo", "true");
+    } else {
+      formData.append("logo", "");
+    }
+    body = formData;
+  }
+
+  type BackendResponse = {
+    success: boolean;
+    data?: {
+      logo?: string;
+    };
+    message?: string;
+  };
+
+  const res = await fetch(`${API_BASE_URL}/settings`, {
+    method: "PATCH",
+    headers,
+    body,
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    let message = `Request failed with status ${res.status}`;
+    try {
+      const err = (await res.json()) as { message?: string };
+      if (err?.message) message = err.message;
+    } catch {
+      // ignore
+    }
+    throw new Error(message);
+  }
+
+  const json = (await res.json()) as BackendResponse;
+  return {
+    logo: json.data?.logo || "",
+  };
 }
 
 export interface PaginatedPhoneResponse {

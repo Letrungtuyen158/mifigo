@@ -293,6 +293,12 @@ export default function AdminPage() {
                     </span>
                   )}
                 </Link>
+                <Link
+                  href="/admin/logo"
+                  className="hidden rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 sm:inline-flex"
+                >
+                  Cài đặt logo
+                </Link>
                 <div className="hidden text-right text-sm sm:block">
                   <div className="font-medium text-slate-900">
                     {admin.name}
@@ -1039,7 +1045,7 @@ function StatusBadge({ item }: { item: PhoneNumberItem }) {
   if (status === "available") {
     return (
       <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-100">
-        Available
+        Đang trống
       </span>
     );
   }
@@ -1047,14 +1053,14 @@ function StatusBadge({ item }: { item: PhoneNumberItem }) {
   if (status === "reserved") {
     return (
       <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 ring-1 ring-amber-100">
-        Reserved
+        Giữ chỗ 24h
       </span>
     );
   }
 
   return (
     <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
-      Sold
+      Đã bán
     </span>
   );
 }
