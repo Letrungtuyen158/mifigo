@@ -15,6 +15,8 @@ import {
   deleteSim,
   downloadSimImportTemplate,
   fetchAllOrders,
+  CATEGORY_OPTIONS,
+  getCategoryLabel,
   type SimWritePayload,
   type PhoneNumberItem,
   type PhoneStatus,
@@ -47,17 +49,6 @@ const CARRIERS = [
   "Digitel",
   "FPT",
   "CMC",
-] as const;
-const CATEGORIES = [
-  "Sim Số Tiến",
-  "Sim Taxi",
-  "Sim Lộc Phát / Phát Lộc",
-  "Sim Thần Tài / Ông Địa",
-  "Sim Gánh / Đảo",
-  "Sim Năm Sinh",
-  "Sim Số Lặp",
-  "Sim Đầu Cổ",
-  "Sim Soi Gương (Đảo)",
 ] as const;
 const MOCK_ADMIN: AdminUser = {
   id: "admin-1",
@@ -527,9 +518,9 @@ export default function AdminPage() {
                     className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none ring-slate-900/10 focus:bg-white focus:ring-2"
                   >
                     <option value="">Danh mục</option>
-                    {CATEGORIES.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
+                    {CATEGORY_OPTIONS.map((c) => (
+                      <option key={c.key} value={c.key}>
+                        {c.label}
                       </option>
                     ))}
                   </select>
@@ -636,7 +627,7 @@ export default function AdminPage() {
                                 : "-"}
                             </td>
                             <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-700">
-                              {item.category || "-"}
+                              {getCategoryLabel(item.category)}
                             </td>
                             <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-500">
                               {item.reservedUntil
@@ -941,9 +932,9 @@ export default function AdminPage() {
                     className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-slate-900/10 focus:ring-2"
                   >
                     <option value="">Không đặt</option>
-                    {CATEGORIES.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
+                    {CATEGORY_OPTIONS.map((c) => (
+                      <option key={c.key} value={c.key}>
+                        {c.label}
                       </option>
                     ))}
                   </select>
@@ -1124,9 +1115,9 @@ export default function AdminPage() {
                     className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-slate-900/10 focus:ring-2"
                   >
                     <option value="">Không đặt</option>
-                    {CATEGORIES.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
+                    {CATEGORY_OPTIONS.map((c) => (
+                      <option key={c.key} value={c.key}>
+                        {c.label}
                       </option>
                     ))}
                   </select>

@@ -11,6 +11,8 @@ import {
   verifyEmail,
   loginUser,
   fetchPublicSettings,
+  CATEGORY_OPTIONS,
+  getCategoryLabel,
   type PhoneNumberItem,
   type PhoneStatus,
 } from "@/lib/phoneSim";
@@ -515,21 +517,11 @@ export default function SimPage() {
                 className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500/20 focus:ring-2"
               >
                 <option value="">Tất cả danh mục</option>
-                <option value="Sim Số Tiến">Sim Số Tiến</option>
-                <option value="Sim Taxi">Sim Taxi</option>
-                <option value="Sim Lộc Phát / Phát Lộc">
-                  Sim Lộc Phát / Phát Lộc
-                </option>
-                <option value="Sim Thần Tài / Ông Địa">
-                  Sim Thần Tài / Ông Địa
-                </option>
-                <option value="Sim Gánh / Đảo">Sim Gánh / Đảo</option>
-                <option value="Sim Năm Sinh">Sim Năm Sinh</option>
-                <option value="Sim Số Lặp">Sim Số Lặp</option>
-                <option value="Sim Đầu Cổ">Sim Đầu Cổ</option>
-                <option value="Sim Soi Gương (Đảo)">
-                  Sim Soi Gương (Đảo)
-                </option>
+                {CATEGORY_OPTIONS.map((c) => (
+                  <option key={c.key} value={c.key}>
+                    {c.label}
+                  </option>
+                ))}
               </select>
               </div>
               <div>
@@ -664,7 +656,7 @@ export default function SimPage() {
                             : "-"}
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-700">
-                          {item.category || "-"}
+                          {getCategoryLabel(item.category)}
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-right">
                           <button

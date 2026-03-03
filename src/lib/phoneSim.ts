@@ -37,6 +37,24 @@ export interface SimWritePayload {
   category?: string;
 }
 
+export const CATEGORY_OPTIONS = [
+  { key: "sim_so_tien", label: "Sim Số Tiến" },
+  { key: "sim_taxi", label: "Sim Taxi" },
+  { key: "sim_loc_phat", label: "Sim Lộc Phát / Phát Lộc" },
+  { key: "sim_than_tai_ong_dia", label: "Sim Thần Tài / Ông Địa" },
+  { key: "sim_ganh_dao", label: "Sim Gánh / Đảo" },
+  { key: "sim_nam_sinh", label: "Sim Năm Sinh" },
+  { key: "sim_so_lap", label: "Sim Số Lặp" },
+  { key: "sim_dau_co", label: "Sim Đầu Cổ" },
+  { key: "sim_soi_guong", label: "Sim Soi Gương (Đảo)" },
+] as const;
+
+export function getCategoryLabel(key?: string | null): string {
+  if (!key) return "-";
+  const found = CATEGORY_OPTIONS.find((c) => c.key === key);
+  return found ? found.label : key;
+}
+
 export async function fetchPublicSettings(): Promise<PublicSettings> {
   type BackendResponse = {
     success: boolean;
