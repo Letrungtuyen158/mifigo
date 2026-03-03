@@ -615,6 +615,9 @@ export default function SimPage() {
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Loại sim
                     </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Danh mục sim
+                    </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Thao tác
                     </th>
@@ -624,7 +627,7 @@ export default function SimPage() {
                   {state.isLoading ? (
                     <tr>
                       <td
-                        colSpan={5}
+                        colSpan={6}
                         className="px-4 py-12 text-center text-sm text-slate-500"
                       >
                         Đang tải dữ liệu số...
@@ -633,7 +636,7 @@ export default function SimPage() {
                   ) : state.items.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={5}
+                        colSpan={6}
                         className="px-4 py-12 text-center text-sm text-slate-500"
                       >
                         Không tìm thấy số phù hợp. Vui lòng thử bộ lọc khác.
@@ -659,6 +662,9 @@ export default function SimPage() {
                             : item.simType === "postpaid"
                             ? "Trả sau"
                             : "-"}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-700">
+                          {item.category || "-"}
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-right">
                           <button

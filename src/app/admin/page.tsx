@@ -582,6 +582,9 @@ export default function AdminPage() {
                           Loại sim
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          Danh mục
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                           Hết hạn giữ
                         </th>
                         <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -632,6 +635,9 @@ export default function AdminPage() {
                                 ? "Trả sau"
                                 : "-"}
                             </td>
+                            <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-700">
+                              {item.category || "-"}
+                            </td>
                             <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-500">
                               {item.reservedUntil
                                 ? new Date(
@@ -659,6 +665,7 @@ export default function AdminPage() {
                                           ? "postpaid"
                                           : "none"
                                       );
+                                      setEditingCategory(item.category || "");
                                     })
                                   }
                                 >
@@ -924,6 +931,23 @@ export default function AdminPage() {
                     <option value="postpaid">Trả sau</option>
                   </select>
                 </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700">
+                    Danh mục sim
+                  </label>
+                  <select
+                    value={editingCategory}
+                    onChange={(e) => setEditingCategory(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-slate-900/10 focus:ring-2"
+                  >
+                    <option value="">Không đặt</option>
+                    {CATEGORIES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-700">
@@ -961,6 +985,7 @@ export default function AdminPage() {
                           editingSimType === "none"
                             ? undefined
                             : (editingSimType as "prepaid" | "postpaid"),
+                        category: editingCategory || undefined,
                       });
                       setState((prev) => ({
                         ...prev,
@@ -998,10 +1023,7 @@ export default function AdminPage() {
                 <h2 className="text-base font-semibold text-slate-900 lg:text-lg">
                   Thêm SIM mới
                 </h2>
-                <p className="mt-1 text-xs text-slate-500 lg:text-sm">
-                  Nhập số SIM và thông tin cơ bản. Số SIM phải là duy nhất trong
-                  hệ thống.
-                </p>
+                
               </div>
               <button
                 type="button"
@@ -1089,18 +1111,40 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700">
-                    Ghi chú
+                    Danh mục sim
                   </label>
-                  <textarea
-                    rows={2}
-                    value={newSim.note ?? ""}
+                  <select
+                    value={newSim.category ?? ""}
                     onChange={(e) =>
-                      setNewSim((prev) => ({ ...prev, note: e.target.value }))
+                      setNewSim((prev) => ({
+                        ...prev,
+                        category: e.target.value || "",
+                      }))
                     }
-                    placeholder="Mô tả ngắn, loại số đẹp..."
-                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none ring-slate-900/10 placeholder:text-slate-400 focus:ring-2"
-                  />
+                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-slate-900/10 focus:ring-2"
+                  >
+                    <option value="">Không đặt</option>
+                    {CATEGORIES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
                 </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700">
+                  Ghi chú
+                </label>
+                <textarea
+                  rows={2}
+                  value={newSim.note ?? ""}
+                  onChange={(e) =>
+                    setNewSim((prev) => ({ ...prev, note: e.target.value }))
+                  }
+                  placeholder="Mô tả ngắn, loại số đẹp..."
+                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none ring-slate-900/10 placeholder:text-slate-400 focus:ring-2"
+                />
               </div>
               <button
                 type="button"
@@ -1127,6 +1171,7 @@ export default function AdminPage() {
                         carrier: "",
                         note: "",
                         simType: undefined,
+                        category: "",
                       });
                     } catch (error) {
                       console.error(error);
