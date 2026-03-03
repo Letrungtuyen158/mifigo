@@ -14,6 +14,7 @@ import {
   updateSim,
   deleteSim,
   downloadSimImportTemplate,
+  fetchAllOrders,
   type SimWritePayload,
   type PhoneNumberItem,
   type PhoneStatus,
@@ -80,6 +81,7 @@ export default function AdminPage() {
   const [editingPhoneNumber, setEditingPhoneNumber] = useState("");
   const [editingStatus, setEditingStatus] = useState<PhoneStatus>("available");
   const [isUpdatingSim, setIsUpdatingSim] = useState(false);
+  const [pendingOrderCount, setPendingOrderCount] = useState(0);
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(state.total / state.pageSize)),
@@ -103,6 +105,16 @@ export default function AdminPage() {
   useEffect(() => {
     if (!admin) return;
     void loadData(1, activeTab, search);
+    void (async () => {
+      try {
+        const orders = await fetchAllOrders();
+        setPendingOrderCount(
+          orders.filter((o) => o.status === "pending").length
+        );
+      } catch {
+        setPendingOrderCount(0);
+      }
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [admin]);
 
@@ -272,9 +284,14 @@ export default function AdminPage() {
               <>
                 <Link
                   href="/admin/orders"
-                  className="hidden rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 sm:inline-flex"
+                  className="relative hidden items-center rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 sm:inline-flex"
                 >
-                  Quản lý order
+                  <span>Quản lý order</span>
+                  {pendingOrderCount > 0 && (
+                    <span className="ml-2 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-semibold text-white">
+                      {pendingOrderCount}
+                    </span>
+                  )}
                 </Link>
                 <div className="hidden text-right text-sm sm:block">
                   <div className="font-medium text-slate-900">

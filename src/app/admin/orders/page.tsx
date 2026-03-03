@@ -9,6 +9,7 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<PhoneOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
+  const pendingCount = orders.filter((o) => o.status === "pending").length;
 
   useEffect(() => {
     async function load() {
@@ -53,9 +54,16 @@ export default function AdminOrdersPage() {
       <header className="border-b bg-white/80 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 lg:px-6">
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 lg:text-2xl">
-              Quản lý đơn hàng
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl font-bold tracking-tight text-slate-900 lg:text-2xl">
+                Quản lý đơn hàng
+              </h1>
+              {pendingCount > 0 && (
+                <span className="inline-flex items-center rounded-full bg-red-500 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
+                  {pendingCount} đơn chờ xử lý
+                </span>
+              )}
+            </div>
             <p className="mt-1 text-sm text-slate-500 lg:text-base">
               Xem và xử lý các đơn đặt số: xác nhận thanh toán hoặc huỷ đơn.
             </p>
