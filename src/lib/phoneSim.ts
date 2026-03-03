@@ -191,6 +191,16 @@ async function apiFetch<T>(
   );
 
   if (!res.ok) {
+    if ((res.status === 401 || res.status === 403) && typeof window !== "undefined") {
+      try {
+        window.localStorage.removeItem("sim_token");
+        window.localStorage.removeItem("sim_user");
+        window.localStorage.removeItem("admin_user");
+      } catch {
+        // ignore storage errors
+      }
+    }
+
     let message = `Request failed with status ${res.status}`;
     try {
       const body = (await res.json()) as { message?: string };
