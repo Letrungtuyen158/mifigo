@@ -10,6 +10,7 @@ export interface PhoneNumberItem {
   carrier?: string;
   note?: string;
   simType?: "prepaid" | "postpaid" | null;
+   category?: string;
 }
 
 export interface PhoneFilters {
@@ -17,6 +18,7 @@ export interface PhoneFilters {
   last4?: string;
   status?: PhoneStatus;
   carrier?: string;
+  category?: string;
   simType?: "prepaid" | "postpaid";
   minPrice?: number;
   maxPrice?: number;
@@ -32,6 +34,7 @@ export interface SimWritePayload {
   carrier?: string;
   note?: string;
   simType?: "prepaid" | "postpaid";
+  category?: string;
 }
 
 export async function fetchPublicSettings(): Promise<PublicSettings> {
@@ -244,6 +247,7 @@ function mapSimToPhoneNumberItem(sim: any): PhoneNumberItem {
     carrier: sim.carrier || undefined,
     note: sim.note || undefined,
     simType: sim.simType || null,
+    category: sim.category || undefined,
   };
 }
 
@@ -300,6 +304,9 @@ export async function fetchPhoneNumbers(params: {
   }
   if (filters?.carrier) {
     query.carrier = filters.carrier;
+  }
+  if (filters?.category) {
+    query.category = filters.category;
   }
   if (filters?.simType) {
     query.simType = filters.simType;

@@ -57,6 +57,7 @@ export default function SimPage() {
     prefixes: string[];
     last4: string;
     carrier: string;
+    category: string;
     simType: "all" | "prepaid" | "postpaid";
     minPrice: string;
     maxPrice: string;
@@ -64,6 +65,7 @@ export default function SimPage() {
     prefixes: [],
     last4: "",
     carrier: "",
+    category: "",
     simType: "all",
     minPrice: "",
     maxPrice: "",
@@ -122,6 +124,7 @@ export default function SimPage() {
       prefixes: string[];
       last4: string;
       carrier: string;
+      category: string;
       simType: "all" | "prepaid" | "postpaid";
       minPrice: string;
       maxPrice: string;
@@ -138,6 +141,7 @@ export default function SimPage() {
             : undefined,
         last4: currentFilters.last4 || undefined,
         carrier: currentFilters.carrier || undefined,
+        category: currentFilters.category || undefined,
         simType:
           currentFilters.simType === "all"
             ? undefined
@@ -183,6 +187,7 @@ export default function SimPage() {
       prefixes: [],
       last4: "",
       carrier: "",
+      category: "",
       simType: "all" as const,
       minPrice: "",
       maxPrice: "",
@@ -496,6 +501,35 @@ export default function SimPage() {
                     {c}
                   </option>
                 ))}
+              </select>
+              </div>
+              <div>
+              <label className="block text-xs font-medium text-slate-700">
+                Danh mục sim
+              </label>
+              <select
+                value={filters.category}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, category: e.target.value }))
+                }
+                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500/20 focus:ring-2"
+              >
+                <option value="">Tất cả danh mục</option>
+                <option value="Sim Số Tiến">Sim Số Tiến</option>
+                <option value="Sim Taxi">Sim Taxi</option>
+                <option value="Sim Lộc Phát / Phát Lộc">
+                  Sim Lộc Phát / Phát Lộc
+                </option>
+                <option value="Sim Thần Tài / Ông Địa">
+                  Sim Thần Tài / Ông Địa
+                </option>
+                <option value="Sim Gánh / Đảo">Sim Gánh / Đảo</option>
+                <option value="Sim Năm Sinh">Sim Năm Sinh</option>
+                <option value="Sim Số Lặp">Sim Số Lặp</option>
+                <option value="Sim Đầu Cổ">Sim Đầu Cổ</option>
+                <option value="Sim Soi Gương (Đảo)">
+                  Sim Soi Gương (Đảo)
+                </option>
               </select>
               </div>
               <div>

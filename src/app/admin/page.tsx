@@ -48,6 +48,17 @@ const CARRIERS = [
   "FPT",
   "CMC",
 ] as const;
+const CATEGORIES = [
+  "Sim Số Tiến",
+  "Sim Taxi",
+  "Sim Lộc Phát / Phát Lộc",
+  "Sim Thần Tài / Ông Địa",
+  "Sim Gánh / Đảo",
+  "Sim Năm Sinh",
+  "Sim Số Lặp",
+  "Sim Đầu Cổ",
+  "Sim Soi Gương (Đảo)",
+] as const;
 const MOCK_ADMIN: AdminUser = {
   id: "admin-1",
   name: "Super Admin",
@@ -65,6 +76,7 @@ export default function AdminPage() {
   const [simTypeFilter, setSimTypeFilter] = useState<"all" | "prepaid" | "postpaid">("all");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
 
   const [state, setState] = useState<PageState>({
     items: [],
@@ -88,6 +100,7 @@ export default function AdminPage() {
     carrier: "",
     note: "",
     simType: undefined,
+    category: "",
   });
   const [isSavingSim, setIsSavingSim] = useState(false);
   const [editingSim, setEditingSim] = useState<PhoneNumberItem | null>(null);
@@ -99,6 +112,7 @@ export default function AdminPage() {
   const [editingSimType, setEditingSimType] = useState<
     "prepaid" | "postpaid" | "none"
   >("none");
+  const [editingCategory, setEditingCategory] = useState("");
   const [isUpdatingSim, setIsUpdatingSim] = useState(false);
   const [pendingOrderCount, setPendingOrderCount] = useState(0);
 
@@ -157,6 +171,7 @@ export default function AdminPage() {
               : (simTypeFilter as "prepaid" | "postpaid"),
           minPrice: minPrice ? Number(minPrice) || undefined : undefined,
           maxPrice: maxPrice ? Number(maxPrice) || undefined : undefined,
+          category: categoryFilter || undefined,
         },
       }),
       fetchPhoneStats(
@@ -473,7 +488,7 @@ export default function AdminPage() {
                     onClick={() => handleChangeTab("sold")}
                   />
                 </div>
-                <div className="mt-3 grid w-full gap-2 md:grid-cols-4">
+                <div className="mt-3 grid w-full gap-2 md:grid-cols-5">
                   <input
                     type="text"
                     value={search}
@@ -505,6 +520,18 @@ export default function AdminPage() {
                     <option value="all">Loại sim</option>
                     <option value="prepaid">Trả trước</option>
                     <option value="postpaid">Trả sau</option>
+                  </select>
+                  <select
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none ring-slate-900/10 focus:bg-white focus:ring-2"
+                  >
+                    <option value="">Danh mục</option>
+                    {CATEGORIES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
                   </select>
                   <div className="flex gap-1">
                     <input
