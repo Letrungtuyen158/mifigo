@@ -1,10 +1,10 @@
- "use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import { fetchOrderById, type PhoneOrder } from "@/lib/phoneSim";
+import { fetchOrderById, type PhoneOrder, AuthError } from "@/lib/phoneSim";
 
 export default function AdminOrderDetailPage() {
   const params = useParams();
@@ -13,6 +13,16 @@ export default function AdminOrderDetailPage() {
 
   const [order, setOrder] = useState<PhoneOrder | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const onSessionExpired = () => {
+      toast.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+      router.push("/admin");
+    };
+    if (typeof window === "undefined") return;
+    window.addEventListener("auth:session-expired", onSessionExpired);
+    return () => window.removeEventListener("auth:session-expired", onSessionExpired);
+  }, [router]);
 
   useEffect(() => {
     if (!orderId) return;
@@ -24,6 +34,10 @@ export default function AdminOrderDetailPage() {
         setOrder(data);
       } catch (error) {
         console.error(error);
+        if (error instanceof AuthError) {
+          router.push("/admin");
+          return;
+        }
         toast.error(
           error instanceof Error
             ? error.message
@@ -88,9 +102,9 @@ export default function AdminOrderDetailPage() {
                   </div>
                   <div>
                     <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                      User ID
+                      Email
                     </div>
-                    <div className="mt-1 text-slate-700">{order.userId}</div>
+                    <div className="mt-1 text-slate-700">{order.userEmail ?? order.userId}</div>
                   </div>
                   <div>
                     <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
@@ -115,6 +129,24 @@ export default function AdminOrderDetailPage() {
                     </div>
                   </div>
                 </div>
+
+                {order.transferImageUrl && (
+                  <div>
+                    <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Ảnh chuyển khoản
+                    </div>
+                    <div className="mt-2">
+                      <a
+                        href={order.transferImageUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center text-blue-600 underline hover:text-blue-800"
+                      >
+                        Mở ảnh trong tab mới
+                      </a>
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <div className="text-xs font-medium uppercase tracking-wide text-slate-500">

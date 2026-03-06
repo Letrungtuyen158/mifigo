@@ -66,6 +66,9 @@ export async function fetchPublicSettings(): Promise<PublicSettings> {
   const res = await fetch(`${API_BASE_URL}/settings/public`, {
     method: "GET",
     credentials: "include",
+    headers: new Headers({
+      "ngrok-skip-browser-warning": "69420",
+    }),
   });
 
   if (!res.ok) {
@@ -84,6 +87,7 @@ export async function updateLogo(options: {
 }): Promise<PublicSettings> {
   const token = getAuthToken();
   const headers = new Headers();
+  headers.set("ngrok-skip-browser-warning", "69420");
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }
@@ -155,6 +159,7 @@ export type OrderStatus = "pending" | "paid" | "canceled";
 export interface PhoneOrder {
   id: string;
   userId: string;
+  userEmail?: string | null;
   phoneNumbers: string[];
   transferImageUrl?: string | null;
   status: OrderStatus;
@@ -181,6 +186,15 @@ export interface AuthResult {
 const API_BASE_URL =
   "https://nonmechanically-nonpedagogic-delcie.ngrok-free.dev/api-mifigo-sim";
 
+/** Lỗi xác thực (401/403): đã clear token và dispatch "auth:session-expired". Caller nên đăng xuất UI, không hiện toast lỗi API. */
+export class AuthError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AuthError";
+    Object.setPrototypeOf(this, AuthError.prototype);
+  }
+}
+
 function getAuthToken(): string | null {
   if (typeof window === "undefined") return null;
   return window.localStorage.getItem("sim_token");
@@ -202,6 +216,7 @@ async function apiFetch<T>(
 ): Promise<T> {
   const token = getAuthToken();
   const headers = new Headers(options.headers ?? {});
+  headers.set("ngrok-skip-browser-warning", "69420");
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }
@@ -216,7 +231,8 @@ async function apiFetch<T>(
   );
 
   if (!res.ok) {
-    if ((res.status === 401 || res.status === 403) && typeof window !== "undefined") {
+    const isAuthError = res.status === 401 || res.status === 403;
+    if (isAuthError && typeof window !== "undefined") {
       try {
         window.localStorage.removeItem("sim_token");
         window.localStorage.removeItem("sim_user");
@@ -224,6 +240,7 @@ async function apiFetch<T>(
       } catch {
         // ignore storage errors
       }
+      window.dispatchEvent(new CustomEvent("auth:session-expired"));
     }
 
     let message = `Request failed with status ${res.status}`;
@@ -233,6 +250,7 @@ async function apiFetch<T>(
     } catch {
       // ignore
     }
+    if (isAuthError) throw new AuthError(message);
     throw new Error(message);
   }
 
@@ -292,6 +310,10 @@ function mapOrderFromBackend(order: any): PhoneOrder {
       typeof userField === "object" && userField !== null
         ? String(userField._id ?? "")
         : String(userField ?? ""),
+    userEmail:
+      typeof userField === "object" && userField !== null && userField.email != null
+        ? String(userField.email)
+        : null,
     phoneNumbers: sims.map((s: any) => String(s.phoneNumber)),
     transferImageUrl: order.paymentImage ?? null,
     status: mapOrderStatusFromBackend(order.status),
@@ -474,6 +496,7 @@ export async function importSimsJson(
 export async function downloadSimImportTemplate(): Promise<void> {
   const token = getAuthToken();
   const headers = new Headers();
+  headers.set("ngrok-skip-browser-warning", "69420");
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }
@@ -534,6 +557,56 @@ export async function fetchPhoneStats(
   };
 }
 
+export interface SalesReportDay {
+  date: string;
+  revenue: number;
+  orderCount: number;
+}
+
+/** Format mới từ BE: data.summary + data.series */
+export interface SalesReportSeriesItem {
+  period: string;
+  revenue: number;
+  revenueFromOrders?: number;
+  revenueFromManual?: number;
+  manualSimCount?: number;
+  orderCount: number;
+}
+
+export interface SalesReportSummary {
+  totalRevenue: number;
+  totalOrders: number;
+  totalManualSims?: number;
+}
+
+export interface SalesReportResult {
+  from: string;
+  to: string;
+  groupBy?: string;
+  /** Format mới: dùng summary + series */
+  summary?: SalesReportSummary;
+  series?: SalesReportSeriesItem[];
+  /** Format cũ (fallback) */
+  totalRevenue?: number;
+  orderCount?: number;
+  previousRevenue?: number;
+  changePercent?: number | null;
+  dailyRevenue?: SalesReportDay[];
+}
+
+export async function fetchSalesReport(params?: {
+  from?: string;
+  to?: string;
+}): Promise<SalesReportResult> {
+  type BackendResponse = {
+    success: boolean;
+    data: SalesReportResult;
+  };
+  const qs = buildQueryString(params ?? {});
+  const res = await apiFetch<BackendResponse>(`/admin/analytics/sales-report${qs}`);
+  return res.data;
+}
+
 export async function fetchReservedNumbersByUser(): Promise<PhoneNumberItem[]> {
   // Chưa có API riêng cho reserved-by-user, để trống tạm thời.
   return [];
@@ -555,6 +628,7 @@ export async function importPhoneNumbersFromFile(file: File): Promise<{
 
   const token = getAuthToken();
   const headers = new Headers();
+  headers.set("ngrok-skip-browser-warning", "69420");
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }
@@ -588,6 +662,7 @@ export async function importPhoneNumbersFromFile(file: File): Promise<{
 export async function exportPhoneNumbers(): Promise<void> {
   const token = getAuthToken();
   const headers = new Headers();
+  headers.set("ngrok-skip-browser-warning", "69420");
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }
@@ -645,6 +720,7 @@ export async function createOrder(
 
   const token = getAuthToken();
   const headers = new Headers();
+  headers.set("ngrok-skip-browser-warning", "69420");
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }

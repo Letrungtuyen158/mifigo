@@ -44,6 +44,7 @@ export async function activatePhoneAction(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "ngrok-skip-browser-warning": "69420",
       },
       body: JSON.stringify(requestBody),
       // Set infinite timeout

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import { fetchSimById, type PhoneNumberItem } from "@/lib/phoneSim";
+import { fetchSimById, type PhoneNumberItem, AuthError } from "@/lib/phoneSim";
 
 export default function SimDetailPage() {
   const params = useParams();
@@ -13,6 +13,16 @@ export default function SimDetailPage() {
 
   const [sim, setSim] = useState<PhoneNumberItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const onSessionExpired = () => {
+      toast.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+      router.push("/sim");
+    };
+    if (typeof window === "undefined") return;
+    window.addEventListener("auth:session-expired", onSessionExpired);
+    return () => window.removeEventListener("auth:session-expired", onSessionExpired);
+  }, [router]);
 
   useEffect(() => {
     if (!simId) return;
@@ -24,6 +34,10 @@ export default function SimDetailPage() {
         setSim(data);
       } catch (error) {
         console.error(error);
+        if (error instanceof AuthError) {
+          router.push("/sim");
+          return;
+        }
         toast.error(
           error instanceof Error ? error.message : "Không tải được thông tin SIM."
         );

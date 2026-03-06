@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import { fetchOrderById, type PhoneOrder } from "@/lib/phoneSim";
+import { fetchOrderById, type PhoneOrder, AuthError } from "@/lib/phoneSim";
 
 export default function UserOrderDetailPage() {
   const params = useParams();
@@ -13,6 +13,16 @@ export default function UserOrderDetailPage() {
 
   const [order, setOrder] = useState<PhoneOrder | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const onSessionExpired = () => {
+      toast.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+      router.push("/sim");
+    };
+    if (typeof window === "undefined") return;
+    window.addEventListener("auth:session-expired", onSessionExpired);
+    return () => window.removeEventListener("auth:session-expired", onSessionExpired);
+  }, [router]);
 
   useEffect(() => {
     if (!orderId) return;
@@ -24,6 +34,10 @@ export default function UserOrderDetailPage() {
         setOrder(data);
       } catch (error) {
         console.error(error);
+        if (error instanceof AuthError) {
+          router.push("/sim");
+          return;
+        }
         toast.error(
           error instanceof Error
             ? error.message

@@ -1,16 +1,28 @@
- "use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { fetchPublicSettings, updateLogo } from "@/lib/phoneSim";
+import { fetchPublicSettings, updateLogo, AuthError } from "@/lib/phoneSim";
 
 export default function AdminLogoPage() {
   const [currentLogo, setCurrentLogo] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const onSessionExpired = () => {
+      toast.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+      router.push("/admin");
+    };
+    if (typeof window === "undefined") return;
+    window.addEventListener("auth:session-expired", onSessionExpired);
+    return () => window.removeEventListener("auth:session-expired", onSessionExpired);
+  }, [router]);
 
   useEffect(() => {
     void (async () => {
@@ -47,6 +59,7 @@ export default function AdminLogoPage() {
       toast.success("Đã cập nhật logo.");
     } catch (error) {
       console.error(error);
+      if (error instanceof AuthError) return;
       toast.error(
         error instanceof Error ? error.message : "Không thể cập nhật logo."
       );
@@ -68,6 +81,7 @@ export default function AdminLogoPage() {
       toast.success("Đã xoá logo.");
     } catch (error) {
       console.error(error);
+      if (error instanceof AuthError) return;
       toast.error(
         error instanceof Error ? error.message : "Không thể xoá logo."
       );

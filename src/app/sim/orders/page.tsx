@@ -2,13 +2,27 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { fetchOrdersByUser, fetchMyPurchases, type PhoneOrder } from "@/lib/phoneSim";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { fetchOrdersByUser, fetchMyPurchases, type PhoneOrder, AuthError } from "@/lib/phoneSim";
 
 export default function UserOrdersPage() {
   const [orders, setOrders] = useState<PhoneOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showOnlyPurchased, setShowOnlyPurchased] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const onSessionExpired = () => {
+      setIsAuthenticated(false);
+      toast.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+      router.push("/sim");
+    };
+    if (typeof window === "undefined") return;
+    window.addEventListener("auth:session-expired", onSessionExpired);
+    return () => window.removeEventListener("auth:session-expired", onSessionExpired);
+  }, [router]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -31,6 +45,15 @@ export default function UserOrdersPage() {
           ? await fetchMyPurchases()
           : await fetchOrdersByUser("me");
         setOrders(data);
+      } catch (error) {
+        if (error instanceof AuthError) {
+          setIsAuthenticated(false);
+          router.push("/sim");
+          return;
+        }
+        toast.error(
+          error instanceof Error ? error.message : "Không tải được lịch sử đơn hàng."
+        );
       } finally {
         setIsLoading(false);
       }

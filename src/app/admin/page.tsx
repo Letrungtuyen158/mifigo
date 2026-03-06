@@ -20,6 +20,7 @@ import {
   type SimWritePayload,
   type PhoneNumberItem,
   type PhoneStatus,
+  AuthError,
 } from "@/lib/phoneSim";
 
 type AdminTab = "all" | PhoneStatus;
@@ -39,8 +40,8 @@ interface PageState {
 
 const PAGE_SIZE = 50;
 const CARRIERS = [
-  "Viettel",
   "MobiFone",
+  "Viettel",
   "VinaPhone",
   "Vietnamobile",
   "Gmobile",
@@ -106,6 +107,7 @@ export default function AdminPage() {
   const [editingCategory, setEditingCategory] = useState("");
   const [isUpdatingSim, setIsUpdatingSim] = useState(false);
   const [pendingOrderCount, setPendingOrderCount] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(state.total / state.pageSize)),
@@ -127,6 +129,17 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
+    const onSessionExpired = () => {
+      setAdmin(null);
+      setShowLogin(true);
+      toast.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+    };
+    if (typeof window === "undefined") return;
+    window.addEventListener("auth:session-expired", onSessionExpired);
+    return () => window.removeEventListener("auth:session-expired", onSessionExpired);
+  }, []);
+
+  useEffect(() => {
     if (!admin) return;
     void loadData(1, activeTab, search);
     void (async () => {
@@ -135,7 +148,8 @@ export default function AdminPage() {
         setPendingOrderCount(
           orders.filter((o) => o.status === "pending").length
         );
-      } catch {
+      } catch (error) {
+        if (error instanceof AuthError) return;
         setPendingOrderCount(0);
       }
     })();
@@ -148,7 +162,8 @@ export default function AdminPage() {
     const statusFilter: PhoneStatus | undefined =
       tab === "all" ? undefined : tab;
 
-    const [listRes, statsRes] = await Promise.all([
+    try {
+      const [listRes, statsRes] = await Promise.all([
       fetchPhoneNumbers({
         page,
         pageSize: PAGE_SIZE,
@@ -182,6 +197,11 @@ export default function AdminPage() {
       total: listRes.total,
     });
     setStats(statsRes);
+    } catch (error) {
+      if (error instanceof AuthError) return;
+      setState((prev) => ({ ...prev, isLoading: false }));
+      toast.error(error instanceof Error ? error.message : "Không tải được dữ liệu.");
+    }
   }
 
   function handleChangePage(nextPage: number) {
@@ -210,6 +230,7 @@ export default function AdminPage() {
       toast.success(`Đã đánh dấu bán: ${updated.number}`);
     } catch (error) {
       console.error(error);
+      if (error instanceof AuthError) return;
       toast.error("Không thể đánh dấu đã bán. Vui lòng thử lại.");
     }
   }
@@ -245,6 +266,7 @@ export default function AdminPage() {
       await promise;
     } catch (error) {
       console.error(error);
+      if (error instanceof AuthError) return;
     }
   }
 
@@ -294,19 +316,20 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="border-b bg-white/80 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 lg:px-6">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 lg:text-2xl">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:py-4 lg:px-6">
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-lg font-bold tracking-tight text-slate-900 sm:text-xl lg:text-2xl">
               Admin quản lý số
             </h1>
-            <p className="mt-1 text-sm text-slate-500 lg:text-base">
+            <p className="mt-0.5 hidden text-sm text-slate-500 sm:block lg:text-base">
               Theo dõi trạng thái số, đánh dấu đã bán, import/export và xem
               thống kê cơ bản.
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             {admin ? (
               <>
+                {/* Desktop: links + user + logout */}
                 <Link
                   href="/admin/orders"
                   className="relative hidden items-center rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 sm:inline-flex"
@@ -317,6 +340,12 @@ export default function AdminPage() {
                       {pendingOrderCount}
                     </span>
                   )}
+                </Link>
+                <Link
+                  href="/admin/reports"
+                  className="hidden rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 sm:inline-flex"
+                >
+                  Báo cáo
                 </Link>
                 <Link
                   href="/admin/logo"
@@ -340,10 +369,78 @@ export default function AdminPage() {
                       window.localStorage.removeItem("admin_user");
                     }
                   }}
-                  className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                  className="hidden rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 sm:inline-flex"
                 >
                   Đăng xuất
                 </button>
+                {/* Mobile: hamburger menu */}
+                <div className="relative sm:hidden">
+                  <button
+                    type="button"
+                    onClick={() => setMobileMenuOpen((o) => !o)}
+                    className="rounded-full border border-slate-200 p-2 text-slate-600 hover:bg-slate-50"
+                    aria-label="Menu"
+                    aria-expanded={mobileMenuOpen}
+                  >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  </button>
+                  {mobileMenuOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-30 bg-black/20"
+                        aria-hidden="true"
+                        onClick={() => setMobileMenuOpen(false)}
+                      />
+                      <div className="absolute right-0 top-full z-40 mt-1 min-w-[200px] rounded-xl border border-slate-200 bg-white py-2 shadow-lg">
+                        <Link
+                          href="/admin/orders"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="relative flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
+                        >
+                          Quản lý order
+                          {pendingOrderCount > 0 && (
+                            <span className="ml-auto inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold text-white">
+                              {pendingOrderCount}
+                            </span>
+                          )}
+                        </Link>
+                        <Link
+                          href="/admin/reports"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
+                        >
+                          Báo cáo
+                        </Link>
+                        <Link
+                          href="/admin/logo"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
+                        >
+                          Cài đặt logo
+                        </Link>
+                        <div className="my-1 border-t border-slate-100" />
+                        <div className="px-4 py-2 text-xs text-slate-500">
+                          {admin.name}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMobileMenuOpen(false);
+                            setAdmin(null);
+                            if (typeof window !== "undefined") {
+                              window.localStorage.removeItem("admin_user");
+                            }
+                          }}
+                          className="flex w-full px-4 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50"
+                        >
+                          Đăng xuất
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
               </>
             ) : (
               <button
@@ -421,6 +518,7 @@ export default function AdminPage() {
                       await downloadSimImportTemplate();
                     } catch (error) {
                       console.error(error);
+                      if (error instanceof AuthError) return;
                       toast.error(
                         error instanceof Error
                           ? error.message
@@ -638,80 +736,92 @@ export default function AdminPage() {
                             </td>
                             <td className="whitespace-nowrap px-4 py-3 text-right">
                               <div className="flex justify-end gap-2">
-                                <button
-                                  type="button"
-                                  className="inline-flex items-center rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
-                                  onClick={() =>
-                                    requireLogin(() => {
-                                      setEditingSim(item);
-                                      setEditingPhoneNumber(item.number);
-                                      setEditingStatus(item.status);
-                                      setEditingPrice(item.price);
-                                      setEditingCarrier(item.carrier || "");
-                                      setEditingNote(item.note || "");
-                                      setEditingSimType(
-                                        item.simType === "prepaid"
-                                          ? "prepaid"
-                                          : item.simType === "postpaid"
-                                          ? "postpaid"
-                                          : "none"
-                                      );
-                                      setEditingCategory(item.category || "");
-                                    })
-                                  }
-                                >
-                                  Sửa
-                                </button>
+                                {item.status !== "sold" && (
+                                  <button
+                                    type="button"
+                                    className="inline-flex items-center rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                                    onClick={() =>
+                                      requireLogin(() => {
+                                        setEditingSim(item);
+                                        setEditingPhoneNumber(item.number);
+                                        setEditingStatus(item.status);
+                                        setEditingPrice(item.price);
+                                        setEditingCarrier(item.carrier || "");
+                                        setEditingNote(item.note || "");
+                                        setEditingSimType(
+                                          item.simType === "prepaid"
+                                            ? "prepaid"
+                                            : item.simType === "postpaid"
+                                            ? "postpaid"
+                                            : "none"
+                                        );
+                                        setEditingCategory(item.category || "");
+                                      })
+                                    }
+                                  >
+                                    Sửa
+                                  </button>
+                                )}
                                 <button
                                   type="button"
                                   disabled={item.status === "sold"}
                                   onClick={() =>
-                                    requireLogin(
-                                      () => void handleMarkSold(item)
-                                    )
+                                    requireLogin(() => {
+                                      if (
+                                        !window.confirm(
+                                          `Đánh dấu SIM ${item.number} là đã bán?`
+                                        )
+                                      ) {
+                                        return;
+                                      }
+                                      void handleMarkSold(item);
+                                    })
                                   }
                                   className="inline-flex items-center rounded-full border border-red-600 px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:border-slate-200 disabled:text-slate-400 disabled:hover:bg-transparent"
                                 >
                                   Đánh dấu đã bán
                                 </button>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    requireLogin(async () => {
-                                      if (
-                                        !window.confirm(
-                                          `Xóa SIM ${item.number}? Hành động này không thể hoàn tác.`
-                                        )
-                                      ) {
-                                        return;
-                                      }
-                                      try {
-                                        await deleteSim(item.id);
-                                        setState((prev) => ({
-                                          ...prev,
-                                          items: prev.items.filter(
-                                            (s) => s.id !== item.id
-                                          ),
-                                          total: Math.max(
-                                            0,
-                                            prev.total - 1
-                                          ),
-                                        }));
-                                        toast.success(
-                                          `Đã xóa SIM ${item.number}.`
-                                        );
-                                      } catch (error) {
-                                        console.error(error);
-                                        toast.error(
-                                          "Không thể xóa SIM. Vui lòng thử lại."
-                                        );
-                                      }
-                                    })
-                                  }
-                                  className="inline-flex items-center rounded-full border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50"
-                                >
-                                  Xoá
-                                </button>
+                                {item.status !== "sold" && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      requireLogin(async () => {
+                                        if (
+                                          !window.confirm(
+                                            `Xóa SIM ${item.number}? Hành động này không thể hoàn tác.`
+                                          )
+                                        ) {
+                                          return;
+                                        }
+                                        try {
+                                          await deleteSim(item.id);
+                                          setState((prev) => ({
+                                            ...prev,
+                                            items: prev.items.filter(
+                                              (s) => s.id !== item.id
+                                            ),
+                                            total: Math.max(
+                                              0,
+                                              prev.total - 1
+                                            ),
+                                          }));
+                                          toast.success(
+                                            `Đã xóa SIM ${item.number}.`
+                                          );
+                                        } catch (error) {
+                                          console.error(error);
+                                          if (error instanceof AuthError) return;
+                                          toast.error(
+                                            "Không thể xóa SIM. Vui lòng thử lại."
+                                          );
+                                        }
+                                      })
+                                    }
+                                    className="inline-flex items-center rounded-full border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50"
+                                  >
+                                    Xoá
+                                  </button>
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -898,7 +1008,7 @@ export default function AdminPage() {
                     onChange={(e) =>
                       setEditingStatus(e.target.value as PhoneStatus)
                     }
-                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-slate-900/10 focus:ring-2"
+                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-slate-900/10 focus:ring-2"
                   >
                     <option value="available">Đang trống</option>
                     <option value="sold">Đã bán</option>
@@ -915,7 +1025,7 @@ export default function AdminPage() {
                         e.target.value as "prepaid" | "postpaid" | "none"
                       )
                     }
-                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-slate-900/10 focus:ring-2"
+                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-slate-900/10 focus:ring-2"
                   >
                     <option value="none">Không đặt</option>
                     <option value="prepaid">Trả trước</option>
@@ -929,7 +1039,7 @@ export default function AdminPage() {
                   <select
                     value={editingCategory}
                     onChange={(e) => setEditingCategory(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-slate-900/10 focus:ring-2"
+                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-slate-900/10 focus:ring-2"
                   >
                     <option value="">Không đặt</option>
                     {CATEGORY_OPTIONS.map((c) => (
@@ -961,6 +1071,13 @@ export default function AdminPage() {
                       toast.error("Vui lòng nhập số SIM.");
                       return;
                     }
+                    if (
+                      !window.confirm(
+                        `Xác nhận cập nhật SIM ${editingPhoneNumber}?`
+                      )
+                    ) {
+                      return;
+                    }
                     setIsUpdatingSim(true);
                     try {
                       const updated = await updateSim(editingSim.id, {
@@ -988,6 +1105,7 @@ export default function AdminPage() {
                       setEditingSim(null);
                     } catch (error) {
                       console.error(error);
+                      if (error instanceof AuthError) return;
                       toast.error(
                         error instanceof Error
                           ? error.message
@@ -1064,8 +1182,7 @@ export default function AdminPage() {
                   <label className="block text-xs font-medium text-slate-700">
                     Nhà mạng
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={newSim.carrier ?? ""}
                     onChange={(e) =>
                       setNewSim((prev) => ({
@@ -1073,9 +1190,15 @@ export default function AdminPage() {
                         carrier: e.target.value,
                       }))
                     }
-                    placeholder="VD: Viettel, Vinaphone..."
-                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none ring-slate-900/10 placeholder:text-slate-400 focus:ring-2"
-                  />
+                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-slate-900/10 focus:ring-2"
+                  >
+                    <option value="">Không đặt</option>
+                    {CARRIERS.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
@@ -1093,7 +1216,7 @@ export default function AdminPage() {
                           : undefined,
                       }))
                     }
-                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-slate-900/10 focus:ring-2"
+                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-slate-900/10 focus:ring-2"
                   >
                     <option value="">Không đặt</option>
                     <option value="prepaid">Trả trước</option>
@@ -1112,7 +1235,7 @@ export default function AdminPage() {
                         category: e.target.value || "",
                       }))
                     }
-                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-slate-900/10 focus:ring-2"
+                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-slate-900/10 focus:ring-2"
                   >
                     <option value="">Không đặt</option>
                     {CATEGORY_OPTIONS.map((c) => (
@@ -1146,6 +1269,13 @@ export default function AdminPage() {
                       toast.error("Vui lòng nhập số SIM.");
                       return;
                     }
+                    if (
+                      !window.confirm(
+                        `Xác nhận thêm SIM ${newSim.phoneNumber.trim()}?`
+                      )
+                    ) {
+                      return;
+                    }
                     setIsSavingSim(true);
                     try {
                       const created = await createSim(newSim);
@@ -1166,6 +1296,7 @@ export default function AdminPage() {
                       });
                     } catch (error) {
                       console.error(error);
+                      if (error instanceof AuthError) return;
                       toast.error(
                         error instanceof Error
                           ? error.message

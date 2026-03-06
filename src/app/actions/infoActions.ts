@@ -72,6 +72,7 @@ export async function updateInfoAction(
       headers: {
         "Content-Type": "application/json",
         "User-Agent": "Mifigo-Admin-Panel/1.0",
+        "ngrok-skip-browser-warning": "69420",
       },
       body: JSON.stringify(requestBody),
     });

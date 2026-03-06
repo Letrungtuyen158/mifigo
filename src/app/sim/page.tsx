@@ -15,6 +15,7 @@ import {
   getCategoryLabel,
   type PhoneNumberItem,
   type PhoneStatus,
+  AuthError,
 } from "@/lib/phoneSim";
 
 interface AuthUser {
@@ -43,8 +44,8 @@ export default function SimPage() {
   const [authTab, setAuthTab] = useState<"register" | "login">("register");
   const ALLOWED_PREFIXES = ["090", "093", "076", "078"] as const;
   const CARRIERS = [
-    "Viettel",
     "MobiFone",
+    "Viettel",
     "VinaPhone",
     "Vietnamobile",
     "Gmobile",
@@ -102,6 +103,16 @@ export default function SimPage() {
         window.localStorage.removeItem("sim_user");
       }
     }
+  }, []);
+
+  useEffect(() => {
+    const onSessionExpired = () => {
+      setAuthUser(null);
+      toast.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+    };
+    if (typeof window === "undefined") return;
+    window.addEventListener("auth:session-expired", onSessionExpired);
+    return () => window.removeEventListener("auth:session-expired", onSessionExpired);
   }, []);
 
   useEffect(() => {
@@ -343,6 +354,7 @@ export default function SimPage() {
       setShowCheckout(false);
     } catch (error) {
       console.error(error);
+      if (error instanceof AuthError) return;
       toast.error("Không thể tạo order. Vui lòng thử lại.");
     }
   }
@@ -395,7 +407,7 @@ export default function SimPage() {
             </button>
             <Link
               href="/sim/orders"
-              className="hidden text-xs font-medium text-slate-600 underline-offset-4 hover:underline sm:inline-block"
+              className="text-xs font-medium text-slate-600 underline-offset-4 hover:underline"
             >
               Lịch sử order
             </Link>
