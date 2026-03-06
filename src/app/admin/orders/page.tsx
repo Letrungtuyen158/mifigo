@@ -146,7 +146,7 @@ export default function AdminOrdersPage() {
                   <div className="grid grid-cols-1 gap-1.5 text-xs">
                     <div className="flex flex-wrap gap-x-1.5">
                       <span className="text-slate-500">Email:</span>
-                      <span className="min-w-0 truncate text-slate-700">{order.userEmail ?? order.userId || "—"}</span>
+                      <span className="min-w-0 truncate text-slate-700">{(order.userEmail ?? order.userId) || "—"}</span>
                     </div>
                     <div className="flex flex-wrap gap-x-1.5">
                       <span className="text-slate-500">Thời gian:</span>

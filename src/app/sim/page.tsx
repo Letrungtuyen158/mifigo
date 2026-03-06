@@ -677,7 +677,7 @@ export default function SimPage() {
                             onClick={() => handleAddToCart(item)}
                             className="inline-flex items-center rounded-full border border-slate-900 px-4 py-1.5 text-xs font-semibold text-slate-900 transition hover:bg-slate-900 hover:text-white disabled:border-slate-200 disabled:text-slate-400 disabled:hover:bg-transparent disabled:hover:text-slate-400"
                           >
-                            Mua
+                            Thêm giỏ hàng
                           </button>
                         </td>
                       </tr>
@@ -738,7 +738,7 @@ export default function SimPage() {
             <div className="mt-3 max-h-64 space-y-2 overflow-auto">
               {cart.length === 0 ? (
                 <p className="text-xs text-slate-500">
-                  Giỏ đang trống. Hãy bấm &quot;Mua&quot; ở danh sách số để thêm
+                  Giỏ đang trống. Hãy bấm &quot;Thêm giỏ hàng&quot; ở danh sách số để thêm
                   vào đây.
                 </p>
               ) : (
@@ -787,7 +787,7 @@ export default function SimPage() {
                 <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
                   1
                 </span>
-                <span>Chọn số &amp; bấm &quot;Mua&quot; để thêm vào giỏ</span>
+                <span>Chọn số &amp; bấm &quot;Thêm giỏ hàng&quot; để thêm vào giỏ</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-[11px] font-bold text-white">
