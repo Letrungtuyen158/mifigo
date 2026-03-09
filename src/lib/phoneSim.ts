@@ -207,8 +207,7 @@ export interface AuthResult {
   user: AuthUser;
 }
 
-const API_BASE_URL =
-  "https://nonmechanically-nonpedagogic-delcie.ngrok-free.dev/api-mifigo-sim";
+const API_BASE_URL = "https://mifigo.shop/api-active-sim";
 
 /** Lỗi xác thực (401/403): đã clear token và dispatch "auth:session-expired". Caller nên đăng xuất UI, không hiện toast lỗi API. */
 export class AuthError extends Error {

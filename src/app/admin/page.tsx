@@ -357,7 +357,7 @@ export default function AdminPage() {
                   href="/admin/logo"
                   className="hidden rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 sm:inline-flex"
                 >
-                  Cài đặt logo
+                  Cài đặt 
                 </Link>
                 <div className="hidden text-right text-sm sm:block">
                   <div className="font-medium text-slate-900">
@@ -424,7 +424,7 @@ export default function AdminPage() {
                           onClick={() => setMobileMenuOpen(false)}
                           className="flex px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
                         >
-                          Cài đặt logo
+                          Cài đặt 
                         </Link>
                         <div className="my-1 border-t border-slate-100" />
                         <div className="px-4 py-2 text-xs text-slate-500">
