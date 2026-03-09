@@ -26,6 +26,7 @@ export interface PhoneFilters {
 
 export interface PublicSettings {
   logo: string;
+  bankAccount: string;
 }
 
 export interface SimWritePayload {
@@ -60,6 +61,7 @@ export async function fetchPublicSettings(): Promise<PublicSettings> {
     success: boolean;
     data: {
       logo?: string;
+      bankAccount?: string;
     };
   };
 
@@ -78,12 +80,14 @@ export async function fetchPublicSettings(): Promise<PublicSettings> {
   const body = (await res.json()) as BackendResponse;
   return {
     logo: body.data?.logo || "",
+    bankAccount: body.data?.bankAccount || "",
   };
 }
 
-export async function updateLogo(options: {
+export async function updateSettings(options: {
   file?: File | null;
-  clear?: boolean;
+  clearLogo?: boolean;
+  bankAccount?: string;
 }): Promise<PublicSettings> {
   const token = getAuthToken();
   const headers = new Headers();
@@ -92,26 +96,23 @@ export async function updateLogo(options: {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  let body: BodyInit;
+  const formData = new FormData();
+
+  if (options.bankAccount != null) {
+    formData.append("bankAccount", options.bankAccount);
+  }
 
   if (options.file) {
-    const formData = new FormData();
     formData.append("logo", options.file);
-    body = formData;
-  } else {
-    const formData = new FormData();
-    if (options.clear) {
-      formData.append("clearLogo", "true");
-    } else {
-      formData.append("logo", "");
-    }
-    body = formData;
+  } else if (options.clearLogo) {
+    formData.append("clearLogo", "true");
   }
 
   type BackendResponse = {
     success: boolean;
     data?: {
       logo?: string;
+      bankAccount?: string;
     };
     message?: string;
   };
@@ -119,11 +120,22 @@ export async function updateLogo(options: {
   const res = await fetch(`${API_BASE_URL}/settings`, {
     method: "PATCH",
     headers,
-    body,
+    body: formData,
     credentials: "include",
   });
 
   if (!res.ok) {
+    const isAuthError = res.status === 401 || res.status === 403;
+    if (isAuthError && typeof window !== "undefined") {
+      try {
+        window.localStorage.removeItem("sim_token");
+        window.localStorage.removeItem("sim_user");
+        window.localStorage.removeItem("admin_user");
+      } catch {
+        // ignore storage errors
+      }
+      window.dispatchEvent(new CustomEvent("auth:session-expired"));
+    }
     let message = `Request failed with status ${res.status}`;
     try {
       const err = (await res.json()) as { message?: string };
@@ -131,13 +143,22 @@ export async function updateLogo(options: {
     } catch {
       // ignore
     }
+    if (isAuthError) throw new AuthError(message);
     throw new Error(message);
   }
 
   const json = (await res.json()) as BackendResponse;
   return {
     logo: json.data?.logo || "",
+    bankAccount: json.data?.bankAccount || "",
   };
+}
+
+export async function updateLogo(options: {
+  file?: File | null;
+  clear?: boolean;
+}): Promise<PublicSettings> {
+  return updateSettings({ file: options.file, clearLogo: options.clear });
 }
 
 export interface PaginatedPhoneResponse {
@@ -162,6 +183,8 @@ export interface PhoneOrder {
   userEmail?: string | null;
   phoneNumbers: string[];
   transferImageUrl?: string | null;
+  totalPrice?: number | null;
+  note?: string | null;
   status: OrderStatus;
   createdAt: string;
 }
@@ -169,6 +192,7 @@ export interface PhoneOrder {
 export interface CreateOrderParams {
   simIds: string[];
   paymentImage: File;
+  note?: string;
 }
 
 export interface AuthUser {
@@ -303,6 +327,27 @@ function mapOrderStatusFromBackend(status: string): OrderStatus {
 function mapOrderFromBackend(order: any): PhoneOrder {
   const userField = order.user;
   const sims = Array.isArray(order.sims) ? order.sims : [];
+  const rawTotalPrice =
+    order.totalPrice ??
+    order.total ??
+    order.total_amount ??
+    order.totalAmount;
+  const parsedTotalPrice =
+    typeof rawTotalPrice === "number"
+      ? rawTotalPrice
+      : rawTotalPrice
+      ? Number(rawTotalPrice)
+      : null;
+  const totalPrice =
+    typeof parsedTotalPrice === "number" && Number.isFinite(parsedTotalPrice)
+      ? parsedTotalPrice
+      : null;
+  const note =
+    order.note != null
+      ? String(order.note)
+      : order.customerNote != null
+      ? String(order.customerNote)
+      : null;
 
   return {
     id: String(order._id),
@@ -316,6 +361,8 @@ function mapOrderFromBackend(order: any): PhoneOrder {
         : null,
     phoneNumbers: sims.map((s: any) => String(s.phoneNumber)),
     transferImageUrl: order.paymentImage ?? null,
+    totalPrice,
+    note,
     status: mapOrderStatusFromBackend(order.status),
     createdAt: order.createdAt
       ? new Date(order.createdAt).toISOString()
@@ -703,7 +750,7 @@ export async function exportPhoneNumbers(): Promise<void> {
 export async function createOrder(
   params: CreateOrderParams
 ): Promise<PhoneOrder> {
-  const { simIds, paymentImage } = params;
+  const { simIds, paymentImage, note } = params;
 
   if (!simIds.length) {
     throw new Error("Vui lòng chọn ít nhất một SIM.");
@@ -712,6 +759,9 @@ export async function createOrder(
   const formData = new FormData();
   formData.append("simIds", JSON.stringify(simIds));
   formData.append("paymentImage", paymentImage);
+  if (note && note.trim()) {
+    formData.append("note", note.trim());
+  }
 
   type BackendOrderResponse = {
     success: boolean;
@@ -733,6 +783,18 @@ export async function createOrder(
   });
 
   if (!res.ok) {
+    const isAuthError = res.status === 401 || res.status === 403;
+    if (isAuthError && typeof window !== "undefined") {
+      try {
+        window.localStorage.removeItem("sim_token");
+        window.localStorage.removeItem("sim_user");
+        window.localStorage.removeItem("admin_user");
+      } catch {
+        // ignore storage errors
+      }
+      window.dispatchEvent(new CustomEvent("auth:session-expired"));
+    }
+
     let message = `Request failed with status ${res.status}`;
     try {
       const body = (await res.json()) as { message?: string };
@@ -740,6 +802,7 @@ export async function createOrder(
     } catch {
       // ignore
     }
+    if (isAuthError) throw new AuthError(message);
     throw new Error(message);
   }
 

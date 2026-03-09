@@ -149,6 +149,20 @@ export default function AdminOrdersPage() {
                       <span className="min-w-0 truncate text-slate-700">{(order.userEmail ?? order.userId) || "—"}</span>
                     </div>
                     <div className="flex flex-wrap gap-x-1.5">
+                      <span className="text-slate-500">Tổng tiền:</span>
+                      <span className="text-slate-700">
+                        {typeof order.totalPrice === "number"
+                          ? `${order.totalPrice.toLocaleString("vi-VN")} ₫`
+                          : "—"}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-x-1.5">
+                      <span className="text-slate-500">Ghi chú:</span>
+                      <span className="min-w-0 truncate text-slate-700">
+                        {order.note ? order.note : "—"}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-x-1.5">
                       <span className="text-slate-500">Thời gian:</span>
                       <span className="text-slate-700">{new Date(order.createdAt).toLocaleString("vi-VN")}</span>
                     </div>
@@ -221,6 +235,12 @@ export default function AdminOrdersPage() {
                     Ảnh chuyển khoản
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Tổng tiền
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Ghi chú
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                     Trạng thái
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -232,7 +252,7 @@ export default function AdminOrdersPage() {
                 {isLoading ? (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={9}
                       className="px-4 py-12 text-center text-sm text-slate-500"
                     >
                       Đang tải danh sách order...
@@ -241,7 +261,7 @@ export default function AdminOrdersPage() {
                 ) : orders.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={9}
                       className="px-4 py-12 text-center text-sm text-slate-500"
                     >
                       Chưa có đơn hàng nào. Khi người dùng tạo order, dữ liệu
@@ -281,6 +301,14 @@ export default function AdminOrdersPage() {
                         ) : (
                           "Chưa upload"
                         )}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-700">
+                        {typeof order.totalPrice === "number"
+                          ? `${order.totalPrice.toLocaleString("vi-VN")} ₫`
+                          : "—"}
+                      </td>
+                      <td className="max-w-[260px] px-4 py-3 text-xs text-slate-700">
+                        <span className="block truncate">{order.note ? order.note : "—"}</span>
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-xs">
                         <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 ring-1 ring-amber-100">

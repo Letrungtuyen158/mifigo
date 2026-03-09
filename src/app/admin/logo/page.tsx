@@ -5,10 +5,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { fetchPublicSettings, updateLogo, AuthError } from "@/lib/phoneSim";
+import { fetchPublicSettings, updateLogo, updateSettings, AuthError } from "@/lib/phoneSim";
 
 export default function AdminLogoPage() {
   const [currentLogo, setCurrentLogo] = useState<string>("");
+  const [bankAccount, setBankAccount] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -29,6 +30,7 @@ export default function AdminLogoPage() {
       try {
         const settings = await fetchPublicSettings();
         setCurrentLogo(settings.logo);
+        setBankAccount(settings.bankAccount || "");
       } catch {
         // ignore, sẽ hiện toast khi user thao tác
       }
@@ -84,6 +86,25 @@ export default function AdminLogoPage() {
       if (error instanceof AuthError) return;
       toast.error(
         error instanceof Error ? error.message : "Không thể xoá logo."
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleSaveBankAccount() {
+    setIsSaving(true);
+    try {
+      const result = await updateSettings({ bankAccount });
+      setBankAccount(result.bankAccount || "");
+      toast.success("Đã cập nhật thông tin chuyển khoản.");
+    } catch (error) {
+      console.error(error);
+      if (error instanceof AuthError) return;
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Không thể cập nhật thông tin chuyển khoản."
       );
     } finally {
       setIsSaving(false);
@@ -180,6 +201,41 @@ export default function AdminLogoPage() {
                   className="inline-flex items-center rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   Xoá logo
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-slate-100 pt-5">
+            <h2 className="text-sm font-semibold text-slate-900 lg:text-base">
+              Thông tin chuyển khoản
+            </h2>
+            <p className="mt-1 text-xs text-slate-500 lg:text-sm">
+              Nội dung này sẽ hiển thị ở popup thanh toán trang mua SIM.
+            </p>
+            <div className="mt-3 space-y-3">
+              <textarea
+                value={bankAccount}
+                onChange={(e) => setBankAccount(e.target.value)}
+                placeholder="Nhập tên ngân hàng, số tài khoản, chủ tài khoản, nội dung chuyển khoản..."
+                className="min-h-[110px] w-full resize-none rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none ring-emerald-500/20 placeholder:text-slate-400 focus:ring-2"
+              />
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={handleSaveBankAccount}
+                  disabled={isSaving}
+                  className="inline-flex items-center rounded-full bg-emerald-600 px-5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Lưu thông tin chuyển khoản
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBankAccount("")}
+                  disabled={isSaving}
+                  className="inline-flex items-center rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Xoá nội dung
                 </button>
               </div>
             </div>

@@ -85,12 +85,18 @@ export default function SimPage() {
   const [showCheckout, setShowCheckout] = useState(false);
   const [checkoutImage, setCheckoutImage] = useState<File | null>(null);
   const [checkoutPreview, setCheckoutPreview] = useState<string | null>(null);
+  const [checkoutNote, setCheckoutNote] = useState<string>("");
   const cartSectionRef = useRef<HTMLDivElement | null>(null);
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(state.total / state.pageSize)),
     [state.total, state.pageSize]
   );
+  const cartTotalPrice = useMemo(
+    () => cart.reduce((sum, item) => sum + (item.price ?? 0), 0),
+    [cart]
+  );
   const [logoUrl, setLogoUrl] = useState<string>("");
+  const [bankAccount, setBankAccount] = useState<string>("");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -108,6 +114,8 @@ export default function SimPage() {
   useEffect(() => {
     const onSessionExpired = () => {
       setAuthUser(null);
+      setShowCheckout(false);
+      setCheckoutNote("");
       toast.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
     };
     if (typeof window === "undefined") return;
@@ -120,8 +128,10 @@ export default function SimPage() {
       try {
         const settings = await fetchPublicSettings();
         setLogoUrl(settings.logo);
+        setBankAccount(settings.bankAccount || "");
       } catch {
         setLogoUrl("");
+        setBankAccount("");
       }
     })();
   }, []);
@@ -300,6 +310,7 @@ export default function SimPage() {
     }
 
     setShowCheckout(true);
+    setCheckoutNote("");
   }
 
   function handleRemoveFromCart(id: string) {
@@ -340,6 +351,7 @@ export default function SimPage() {
       const order = await createOrder({
         simIds: cart.map((item) => item.id),
         paymentImage: checkoutImage,
+        note: checkoutNote.trim() || undefined,
       });
 
       toast.success(
@@ -347,6 +359,7 @@ export default function SimPage() {
       );
       setCart([]);
       setCheckoutImage(null);
+      setCheckoutNote("");
       if (checkoutPreview) {
         URL.revokeObjectURL(checkoutPreview);
         setCheckoutPreview(null);
@@ -355,7 +368,9 @@ export default function SimPage() {
     } catch (error) {
       console.error(error);
       if (error instanceof AuthError) return;
-      toast.error("Không thể tạo order. Vui lòng thử lại.");
+      toast.error(
+        error instanceof Error ? error.message : "Không thể tạo order."
+      );
     }
   }
 
@@ -958,7 +973,10 @@ export default function SimPage() {
               </div>
               <button
                 type="button"
-                onClick={() => setShowCheckout(false)}
+                onClick={() => {
+                  setShowCheckout(false);
+                  setCheckoutNote("");
+                }}
                 className="rounded-full bg-slate-100 p-1 text-slate-500 hover:bg-slate-200"
               >
                 ✕
@@ -979,19 +997,30 @@ export default function SimPage() {
                     cart.map((item) => (
                       <div
                         key={item.id}
-                        className="flex items-center justify-between text-slate-900"
+                        className="flex items-center justify-between gap-3 text-slate-900"
                       >
-                        <span>{item.number}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveFromCart(item.id)}
-                          className="text-[11px] text-slate-500 hover:text-red-600"
-                        >
-                          Xoá
-                        </button>
+                        <span className="min-w-0 truncate">{item.number}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="whitespace-nowrap text-xs font-semibold text-slate-800">
+                            {`${(item.price ?? 0).toLocaleString("vi-VN")} ₫`}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFromCart(item.id)}
+                            className="text-[11px] text-slate-500 hover:text-red-600"
+                          >
+                            Xoá
+                          </button>
+                        </div>
                       </div>
                     ))
                   )}
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-white px-3 py-2 text-xs">
+                  <span className="font-medium text-slate-600">Tổng tiền</span>
+                  <span className="font-semibold text-slate-900">
+                    {`${cartTotalPrice.toLocaleString("vi-VN")} ₫`}
+                  </span>
                 </div>
               </div>
 
@@ -999,6 +1028,14 @@ export default function SimPage() {
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Ảnh chuyển khoản
                 </h3>
+                <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-red-600">
+                    Thông tin chuyển khoản
+                  </div>
+                  <div className="mt-1 whitespace-pre-wrap">
+                    {bankAccount || "Chưa có thông tin chuyển khoản. Vui lòng liên hệ admin."}
+                  </div>
+                </div>
                 <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-center text-xs text-slate-500 hover:border-emerald-500 hover:bg-emerald-50">
                   <span className="mb-1 font-medium">
                     Tải ảnh chứng từ (PNG, JPG)
@@ -1023,6 +1060,21 @@ export default function SimPage() {
                   </div>
                 )}
               </div>
+            </div>
+
+            <div className="mt-4 space-y-2">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Ghi chú
+              </h3>
+              <textarea
+                value={checkoutNote}
+                onChange={(e) => setCheckoutNote(e.target.value)}
+                placeholder="Nhập địa chỉ, SĐT và STK ngân hàng..."
+                className="min-h-[92px] w-full resize-none rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500/20 placeholder:text-slate-400 focus:ring-2"
+              />
+              <p className="text-[11px] text-slate-500">
+                VD: Nguyễn Văn A - 090xxxxxxx - 12 Nguyễn Trãi, Q1 - STK: 0123456789 (VCB)
+              </p>
             </div>
 
             <button

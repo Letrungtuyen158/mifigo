@@ -108,6 +108,16 @@ export default function AdminOrderDetailPage() {
                   </div>
                   <div>
                     <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Tổng tiền
+                    </div>
+                    <div className="mt-1 text-slate-700">
+                      {typeof order.totalPrice === "number"
+                        ? `${order.totalPrice.toLocaleString("vi-VN")} ₫`
+                        : "—"}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
                       Thời gian tạo
                     </div>
                     <div className="mt-1 text-slate-700">
@@ -127,6 +137,15 @@ export default function AdminOrderDetailPage() {
                           : "Đã huỷ"}
                       </span>
                     </div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Ghi chú
+                  </div>
+                  <div className="mt-1 whitespace-pre-wrap text-sm text-slate-700">
+                    {order.note ? order.note : "—"}
                   </div>
                 </div>
 

@@ -231,7 +231,11 @@ export default function AdminPage() {
     } catch (error) {
       console.error(error);
       if (error instanceof AuthError) return;
-      toast.error("Không thể đánh dấu đã bán. Vui lòng thử lại.");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Không thể đánh dấu đã bán."
+      );
     }
   }
 
@@ -245,7 +249,8 @@ export default function AdminPage() {
         loading: "Đang import danh sách số...",
         success: (res) =>
           `Import xong ${res.imported.toLocaleString("vi-VN")} số`,
-        error: "Import thất bại. Vui lòng kiểm tra lại file.",
+        error: (err) =>
+          err instanceof Error ? err.message : "Import thất bại.",
       });
 
       await promise;
@@ -261,7 +266,8 @@ export default function AdminPage() {
       toast.promise(promise, {
         loading: "Đang chuẩn bị file export...",
         success: "Đã export danh sách (mock). Gắn API thật để tải file.",
-        error: "Export thất bại. Vui lòng thử lại.",
+        error: (err) =>
+          err instanceof Error ? err.message : "Export thất bại.",
       });
       await promise;
     } catch (error) {
