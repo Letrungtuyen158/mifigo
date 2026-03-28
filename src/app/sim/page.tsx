@@ -42,7 +42,17 @@ export default function SimPage() {
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
   const [authTab, setAuthTab] = useState<"register" | "login">("register");
-  const ALLOWED_PREFIXES = ["090", "093", "076", "078"] as const;
+  /**
+   * Chỉ là UI + state gửi lên BE. Lọc danh sách SIM do BE (`GET /sim?prefix=…`).
+   * Nhiều đầu số: gửi `prefix=09,08` — BE đã xử lý OR trong regex.
+   */
+  const PREFIX_OPTIONS = [
+    { label: "09x", value: "09" },
+    { label: "08x", value: "08" },
+    { label: "07x", value: "07" },
+    { label: "05x", value: "05" },
+    { label: "03x", value: "03" },
+  ] as const;
   const CARRIERS = [
     "MobiFone",
     "Viettel",
@@ -469,20 +479,20 @@ export default function SimPage() {
                 Lọc theo đầu số
               </label>
               <div className="mt-1 flex flex-wrap gap-2">
-                {ALLOWED_PREFIXES.map((p) => {
-                  const active = filters.prefixes.includes(p);
+                {PREFIX_OPTIONS.map(({ label, value }) => {
+                  const active = filters.prefixes.includes(value);
                   return (
                     <button
-                      key={p}
+                      key={value}
                       type="button"
                       onClick={() =>
                         setFilters((prev) => {
-                          const exists = prev.prefixes.includes(p);
+                          const exists = prev.prefixes.includes(value);
                           return {
                             ...prev,
                             prefixes: exists
-                              ? prev.prefixes.filter((v) => v !== p)
-                              : [...prev.prefixes, p],
+                              ? prev.prefixes.filter((v) => v !== value)
+                              : [...prev.prefixes, value],
                           };
                         })
                       }
@@ -492,7 +502,7 @@ export default function SimPage() {
                           : "rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-50"
                       }
                     >
-                      {p}
+                      {label}
                     </button>
                   );
                 })}

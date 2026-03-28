@@ -10,6 +10,7 @@ import {
   exportPhoneNumbers,
   markPhoneNumberSold,
   loginUser,
+  changeOwnPassword,
   createSim,
   updateSim,
   deleteSim,
@@ -25,9 +26,12 @@ import {
 
 type AdminTab = "all" | PhoneStatus;
 
+type AdminRole = "admin" | "staff";
+
 interface AdminUser {
   id: string;
   name: string;
+  role: AdminRole;
 }
 
 interface PageState {
@@ -54,6 +58,7 @@ const CARRIERS = [
 const MOCK_ADMIN: AdminUser = {
   id: "admin-1",
   name: "Super Admin",
+  role: "admin",
 };
 
 export default function AdminPage() {
@@ -108,20 +113,32 @@ export default function AdminPage() {
   const [isUpdatingSim, setIsUpdatingSim] = useState(false);
   const [pendingOrderCount, setPendingOrderCount] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [changePwNew, setChangePwNew] = useState("");
+  const [changePwConfirm, setChangePwConfirm] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(state.total / state.pageSize)),
     [state.total, state.pageSize]
   );
 
+  /** Chỉ admin thấy cột Sửa / Đánh dấu / Xoá; staff chỉ xem danh sách. */
+  const showSimActionColumn = admin?.role === "admin";
+  const simTableColSpan = showSimActionColumn ? 8 : 7;
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = window.localStorage.getItem("admin_user");
     if (!stored) return;
     try {
-      const parsed = JSON.parse(stored) as AdminUser;
-      if (parsed && parsed.id) {
-        setAdmin(parsed);
+      const parsed = JSON.parse(stored) as Partial<AdminUser> & { id?: string };
+      if (parsed?.id) {
+        setAdmin({
+          id: parsed.id,
+          name: parsed.name ?? "",
+          role: parsed.role === "staff" ? "staff" : "admin",
+        });
       }
     } catch {
       window.localStorage.removeItem("admin_user");
@@ -285,13 +302,14 @@ export default function AdminPage() {
     void (async () => {
       try {
         const { token, user } = await loginUser(loginUsername.trim(), loginPassword);
-        if (user.role !== "admin") {
-          toast.error("Tài khoản này không có quyền admin.");
+        if (user.role !== "admin" && user.role !== "staff") {
+          toast.error("Tài khoản này không có quyền truy cập trang quản trị.");
           return;
         }
         const adminUser: AdminUser = {
           id: user.id,
           name: user.username || user.email,
+          role: user.role === "staff" ? "staff" : "admin",
         };
         setAdmin(adminUser);
         if (typeof window !== "undefined") {
@@ -319,6 +337,41 @@ export default function AdminPage() {
     action();
   }
 
+  function openChangePasswordModal() {
+    setChangePwNew("");
+    setChangePwConfirm("");
+    setShowChangePassword(true);
+  }
+
+  function handleSubmitChangePassword() {
+    if (!changePwNew.trim() || changePwNew.length < 6) {
+      toast.error("Mật khẩu mới tối thiểu 6 ký tự.");
+      return;
+    }
+    if (changePwNew !== changePwConfirm) {
+      toast.error("Mật khẩu xác nhận không khớp.");
+      return;
+    }
+    void (async () => {
+      setIsChangingPassword(true);
+      try {
+        await changeOwnPassword(changePwNew);
+        toast.success("Đã đổi mật khẩu thành công.");
+        setShowChangePassword(false);
+        setChangePwNew("");
+        setChangePwConfirm("");
+      } catch (error) {
+        console.error(error);
+        if (error instanceof AuthError) return;
+        toast.error(
+          error instanceof Error ? error.message : "Không thể đổi mật khẩu."
+        );
+      } finally {
+        setIsChangingPassword(false);
+      }
+    })();
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="border-b bg-white/80 backdrop-blur">
@@ -327,10 +380,6 @@ export default function AdminPage() {
             <h1 className="truncate text-lg font-bold tracking-tight text-slate-900 sm:text-xl lg:text-2xl">
               Admin quản lý số
             </h1>
-            <p className="mt-0.5 hidden text-sm text-slate-500 sm:block lg:text-base">
-              Theo dõi trạng thái số, đánh dấu đã bán, import/export và xem
-              thống kê cơ bản.
-            </p>
           </div>
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             {admin ? (
@@ -354,17 +403,33 @@ export default function AdminPage() {
                   Báo cáo
                 </Link>
                 <Link
+                  href="/admin/users"
+                  className="hidden rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 sm:inline-flex"
+                >
+                  Người dùng
+                </Link>
+                <Link
                   href="/admin/logo"
                   className="hidden rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 sm:inline-flex"
                 >
                   Cài đặt 
                 </Link>
+                <button
+                  type="button"
+                  onClick={openChangePasswordModal}
+                  className="hidden rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 sm:inline-flex"
+                >
+                  Đổi mật khẩu
+                </button>
                 <div className="hidden text-right text-sm sm:block">
                   <div className="font-medium text-slate-900">
                     {admin.name}
                   </div>
                   <div className="text-slate-500 text-xs">
-                    Quyền: Toàn quyền quản trị
+                    Quyền:{" "}
+                    {admin.role === "admin"
+                      ? "Quản trị viên"
+                      : "Nhân viên"}
                   </div>
                 </div>
                 <button
@@ -420,15 +485,37 @@ export default function AdminPage() {
                           Báo cáo
                         </Link>
                         <Link
+                          href="/admin/users"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
+                        >
+                          Người dùng
+                        </Link>
+                        <Link
                           href="/admin/logo"
                           onClick={() => setMobileMenuOpen(false)}
                           className="flex px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
                         >
                           Cài đặt 
                         </Link>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMobileMenuOpen(false);
+                            openChangePasswordModal();
+                          }}
+                          className="flex w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50"
+                        >
+                          Đổi mật khẩu
+                        </button>
                         <div className="my-1 border-t border-slate-100" />
                         <div className="px-4 py-2 text-xs text-slate-500">
-                          {admin.name}
+                          <div className="font-medium text-slate-800">{admin.name}</div>
+                          <div className="mt-0.5">
+                            {admin.role === "admin"
+                              ? "Quản trị viên"
+                              : "Nhân viên"}
+                          </div>
                         </div>
                         <button
                           type="button"
@@ -682,16 +769,18 @@ export default function AdminPage() {
                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                           Hết hạn giữ
                         </th>
-                        <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
-                          Hành động
-                        </th>
+                        {showSimActionColumn && (
+                          <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            Hành động
+                          </th>
+                        )}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
                       {state.isLoading ? (
                         <tr>
                           <td
-                            colSpan={4}
+                            colSpan={simTableColSpan}
                             className="px-4 py-12 text-center text-sm text-slate-500"
                           >
                             Đang tải danh sách số...
@@ -700,7 +789,7 @@ export default function AdminPage() {
                       ) : state.items.length === 0 ? (
                         <tr>
                           <td
-                            colSpan={4}
+                            colSpan={simTableColSpan}
                             className="px-4 py-12 text-center text-sm text-slate-500"
                           >
                             Không có dữ liệu cho bộ lọc hiện tại.
@@ -740,96 +829,100 @@ export default function AdminPage() {
                                   ).toLocaleString("vi-VN")
                                 : "-"}
                             </td>
-                            <td className="whitespace-nowrap px-4 py-3 text-right">
-                              <div className="flex justify-end gap-2">
-                                {item.status !== "sold" && (
+                            {showSimActionColumn && (
+                              <td className="whitespace-nowrap px-4 py-3 text-right">
+                                <div className="flex justify-end gap-2">
+                                  {item.status !== "sold" && (
+                                    <button
+                                      type="button"
+                                      className="inline-flex items-center rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                                      onClick={() =>
+                                        requireLogin(() => {
+                                          setEditingSim(item);
+                                          setEditingPhoneNumber(item.number);
+                                          setEditingStatus(item.status);
+                                          setEditingPrice(item.price);
+                                          setEditingCarrier(item.carrier || "");
+                                          setEditingNote(item.note || "");
+                                          setEditingSimType(
+                                            item.simType === "prepaid"
+                                              ? "prepaid"
+                                              : item.simType === "postpaid"
+                                              ? "postpaid"
+                                              : "none"
+                                          );
+                                          setEditingCategory(item.category || "");
+                                        })
+                                      }
+                                    >
+                                      Sửa
+                                    </button>
+                                  )}
                                   <button
                                     type="button"
-                                    className="inline-flex items-center rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                                    disabled={item.status === "sold"}
                                     onClick={() =>
                                       requireLogin(() => {
-                                        setEditingSim(item);
-                                        setEditingPhoneNumber(item.number);
-                                        setEditingStatus(item.status);
-                                        setEditingPrice(item.price);
-                                        setEditingCarrier(item.carrier || "");
-                                        setEditingNote(item.note || "");
-                                        setEditingSimType(
-                                          item.simType === "prepaid"
-                                            ? "prepaid"
-                                            : item.simType === "postpaid"
-                                            ? "postpaid"
-                                            : "none"
-                                        );
-                                        setEditingCategory(item.category || "");
-                                      })
-                                    }
-                                  >
-                                    Sửa
-                                  </button>
-                                )}
-                                <button
-                                  type="button"
-                                  disabled={item.status === "sold"}
-                                  onClick={() =>
-                                    requireLogin(() => {
-                                      if (
-                                        !window.confirm(
-                                          `Đánh dấu SIM ${item.number} là đã bán?`
-                                        )
-                                      ) {
-                                        return;
-                                      }
-                                      void handleMarkSold(item);
-                                    })
-                                  }
-                                  className="inline-flex items-center rounded-full border border-red-600 px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:border-slate-200 disabled:text-slate-400 disabled:hover:bg-transparent"
-                                >
-                                  Đánh dấu đã bán
-                                </button>
-                                {item.status !== "sold" && (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      requireLogin(async () => {
                                         if (
                                           !window.confirm(
-                                            `Xóa SIM ${item.number}? Hành động này không thể hoàn tác.`
+                                            `Đánh dấu SIM ${item.number} là đã bán?`
                                           )
                                         ) {
                                           return;
                                         }
-                                        try {
-                                          await deleteSim(item.id);
-                                          setState((prev) => ({
-                                            ...prev,
-                                            items: prev.items.filter(
-                                              (s) => s.id !== item.id
-                                            ),
-                                            total: Math.max(
-                                              0,
-                                              prev.total - 1
-                                            ),
-                                          }));
-                                          toast.success(
-                                            `Đã xóa SIM ${item.number}.`
-                                          );
-                                        } catch (error) {
-                                          console.error(error);
-                                          if (error instanceof AuthError) return;
-                                          toast.error(
-                                            "Không thể xóa SIM. Vui lòng thử lại."
-                                          );
-                                        }
+                                        void handleMarkSold(item);
                                       })
                                     }
-                                    className="inline-flex items-center rounded-full border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50"
+                                    className="inline-flex items-center rounded-full border border-red-600 px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:border-slate-200 disabled:text-slate-400 disabled:hover:bg-transparent"
                                   >
-                                    Xoá
+                                    Đánh dấu đã bán
                                   </button>
-                                )}
-                              </div>
-                            </td>
+                                  {item.status !== "sold" && (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        requireLogin(async () => {
+                                          if (
+                                            !window.confirm(
+                                              `Xóa SIM ${item.number}? Hành động này không thể hoàn tác.`
+                                            )
+                                          ) {
+                                            return;
+                                          }
+                                          try {
+                                            await deleteSim(item.id);
+                                            setState((prev) => ({
+                                              ...prev,
+                                              items: prev.items.filter(
+                                                (s) => s.id !== item.id
+                                              ),
+                                              total: Math.max(
+                                                0,
+                                                prev.total - 1
+                                              ),
+                                            }));
+                                            toast.success(
+                                              `Đã xóa SIM ${item.number}.`
+                                            );
+                                          } catch (error) {
+                                            console.error(error);
+                                            if (error instanceof AuthError) return;
+                                            toast.error(
+                                              error instanceof Error
+                                                ? error.message
+                                                : "Không thể xóa SIM."
+                                            );
+                                          }
+                                        })
+                                      }
+                                      className="inline-flex items-center rounded-full border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50"
+                                    >
+                                      Xoá
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            )}
                           </tr>
                         ))
                       )}
@@ -872,6 +965,66 @@ export default function AdminPage() {
           </section>
         )}
       </main>
+
+      {showChangePassword && admin && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 px-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-base font-semibold text-slate-900 lg:text-lg">
+                  Đổi mật khẩu
+                </h2>
+                <p className="mt-1 text-xs text-slate-500 lg:text-sm">
+                  Nhập mật khẩu mới (tối thiểu 6 ký tự).
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowChangePassword(false)}
+                className="rounded-full bg-slate-100 p-1 text-slate-500 hover:bg-slate-200"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="mt-4 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-700">
+                  Mật khẩu mới
+                </label>
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  value={changePwNew}
+                  onChange={(e) => setChangePwNew(e.target.value)}
+                  placeholder="••••••••"
+                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none ring-slate-900/10 placeholder:text-slate-400 focus:ring-2"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700">
+                  Xác nhận mật khẩu
+                </label>
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  value={changePwConfirm}
+                  onChange={(e) => setChangePwConfirm(e.target.value)}
+                  placeholder="••••••••"
+                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none ring-slate-900/10 placeholder:text-slate-400 focus:ring-2"
+                />
+              </div>
+              <button
+                type="button"
+                disabled={isChangingPassword}
+                onClick={handleSubmitChangePassword}
+                className="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isChangingPassword ? "Đang lưu…" : "Lưu mật khẩu mới"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showLogin && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 px-4">

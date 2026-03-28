@@ -223,6 +223,34 @@ function getAuthToken(): string | null {
   return window.localStorage.getItem("sim_token");
 }
 
+export type StoredAdminSession = {
+  id: string;
+  name: string;
+  role: "admin" | "staff";
+};
+
+/** Session admin/staff sau đăng nhập (cùng format với `admin_user` trên trang admin). */
+export function getStoredAdminSession(): StoredAdminSession | null {
+  if (typeof window === "undefined") return null;
+  const raw = window.localStorage.getItem("admin_user");
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as {
+      id?: string;
+      name?: string;
+      role?: string;
+    };
+    if (!parsed?.id) return null;
+    return {
+      id: String(parsed.id),
+      name: String(parsed.name ?? ""),
+      role: parsed.role === "staff" ? "staff" : "admin",
+    };
+  } catch {
+    return null;
+  }
+}
+
 function buildQueryString(params: Record<string, unknown>): string {
   const searchParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
@@ -916,6 +944,84 @@ export async function loginUser(email: string, password: string): Promise<AuthRe
       username: res.user.username,
     },
   };
+}
+
+/** Đổi mật khẩu tài khoản đang đăng nhập (admin/staff). POST /auth/change-password */
+export async function changeOwnPassword(newPassword: string): Promise<void> {
+  type BackendResponse = { success: boolean; message?: string };
+  await apiFetch<BackendResponse>("/auth/change-password", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ password: newPassword }),
+  });
+}
+
+export interface AdminListedUser {
+  id: string;
+  email: string;
+  role: string;
+  isEmailVerified?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+function mapAdminUserFromBackend(u: Record<string, unknown>): AdminListedUser {
+  return {
+    id: String(u._id ?? ""),
+    email: String(u.email ?? ""),
+    role: String(u.role ?? "customer"),
+    isEmailVerified: Boolean(u.isEmailVerified),
+    createdAt: u.createdAt != null ? String(u.createdAt) : undefined,
+    updatedAt: u.updatedAt != null ? String(u.updatedAt) : undefined,
+  };
+}
+
+/** Danh sách user (admin/staff). GET /auth/admin-list-users?page&limit&search */
+export async function fetchAdminUsers(params: {
+  page?: number;
+  limit?: number;
+  search?: string;
+}): Promise<{
+  items: AdminListedUser[];
+  page: number;
+  limit: number;
+  total: number;
+}> {
+  // Luôn gửi `search` (kể cả rỗng): buildQueryString bỏ key rỗng; BE cần query.search cho $regex
+  const searchParams = new URLSearchParams();
+  searchParams.set("page", String(params.page ?? 1));
+  searchParams.set("limit", String(params.limit ?? 20));
+  searchParams.set("search", params.search?.trim() ?? "");
+  const qs = `?${searchParams.toString()}`;
+  type BackendResponse = {
+    success: boolean;
+    data: Record<string, unknown>[];
+    pagination: { page: number; limit: number; total: number };
+  };
+  const res = await apiFetch<BackendResponse>(`/auth/admin-list-users${qs}`);
+  return {
+    items: (res.data || []).map(mapAdminUserFromBackend),
+    page: res.pagination.page,
+    limit: res.pagination.limit,
+    total: res.pagination.total,
+  };
+}
+
+/** Admin/staff đổi mật khẩu user khác. POST /auth/admin-change-password */
+export async function adminChangeUserPassword(
+  userId: string,
+  newPassword: string
+): Promise<void> {
+  type BackendResponse = { success: boolean; message?: string };
+  await apiFetch<BackendResponse>("/auth/admin-change-password", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ userId, password: newPassword }),
+  });
 }
 
 export async function updateOrderStatus(
