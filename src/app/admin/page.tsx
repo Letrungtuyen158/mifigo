@@ -186,7 +186,7 @@ export default function AdminPage() {
         pageSize: PAGE_SIZE,
         filters: {
           status: statusFilter,
-          last4: keyword || undefined,
+          search: keyword || undefined,
           carrier: carrierFilter || undefined,
           simType:
             simTypeFilter === "all"
@@ -675,7 +675,7 @@ export default function AdminPage() {
                     type="text"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Tìm 4 số cuối..."
+                    placeholder="Tìm theo số…"
                     className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none ring-slate-900/10 placeholder:text-slate-400 focus:bg-white focus:ring-2"
                   />
                   <select

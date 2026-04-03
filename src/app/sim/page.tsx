@@ -68,7 +68,7 @@ export default function SimPage() {
 
   const [filters, setFilters] = useState<{
     prefixes: string[];
-    last4: string;
+    search: string;
     carrier: string;
     category: string;
     simType: "all" | "prepaid" | "postpaid";
@@ -76,7 +76,7 @@ export default function SimPage() {
     maxPrice: string;
   }>({
     prefixes: [],
-    last4: "",
+    search: "",
     carrier: "",
     category: "",
     simType: "all",
@@ -155,7 +155,7 @@ export default function SimPage() {
     page: number,
     currentFilters: {
       prefixes: string[];
-      last4: string;
+      search: string;
       carrier: string;
       category: string;
       simType: "all" | "prepaid" | "postpaid";
@@ -172,7 +172,7 @@ export default function SimPage() {
           currentFilters.prefixes && currentFilters.prefixes.length > 0
             ? currentFilters.prefixes.join(",")
             : undefined,
-        last4: currentFilters.last4 || undefined,
+        search: currentFilters.search || undefined,
         carrier: currentFilters.carrier || undefined,
         category: currentFilters.category || undefined,
         simType:
@@ -218,7 +218,7 @@ export default function SimPage() {
   function handleClearFilters() {
     const reset = {
       prefixes: [],
-      last4: "",
+      search: "",
       carrier: "",
       category: "",
       simType: "all" as const,
@@ -510,15 +510,15 @@ export default function SimPage() {
               </div>
               <div>
               <label className="block text-xs font-medium text-slate-700">
-                Tìm theo 4 số cuối
+                Tìm theo số
               </label>
               <input
                 type="text"
-                maxLength={4}
-                placeholder="VD: 8888"
-                value={filters.last4}
+                autoComplete="off"
+                placeholder="VD: 098, 8888…"
+                value={filters.search}
                 onChange={(e) =>
-                  setFilters((prev) => ({ ...prev, last4: e.target.value }))
+                  setFilters((prev) => ({ ...prev, search: e.target.value }))
                 }
                 className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500/20 placeholder:text-slate-400 focus:ring-2"
               />

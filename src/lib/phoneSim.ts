@@ -15,7 +15,8 @@ export interface PhoneNumberItem {
 
 export interface PhoneFilters {
   prefix?: string;
-  last4?: string;
+  /** Chuỗi số tìm trong số điện thoại (BE: query `search`). */
+  search?: string;
   status?: PhoneStatus;
   carrier?: string;
   category?: string;
@@ -412,9 +413,8 @@ export async function fetchPhoneNumbers(params: {
   if (filters?.prefix) {
     query.prefix = filters.prefix;
   }
-  if (filters?.last4) {
-    // BE dùng param `search` cho 4 số cuối / chuỗi tìm kiếm
-    query.search = filters.last4;
+  if (filters?.search) {
+    query.search = filters.search;
   }
   if (filters?.carrier) {
     query.carrier = filters.carrier;
