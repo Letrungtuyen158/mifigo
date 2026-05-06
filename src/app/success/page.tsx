@@ -10,10 +10,18 @@ function SuccessPageContent() {
   const message = searchParams.get("message");
   const data = searchParams.get("data");
 
-  const getSuccessMessage = () => {
+  const getSuccessMessage = (): {
+    title: string;
+    /** Dòng tiếng Việt nổi bật cho người dùng trong nước */
+    titleVi?: string;
+    message: string;
+    backText: string;
+    backUrl: string;
+  } => {
     if (type === "phone") {
       return {
         title: "Activation Successful! (激活成功!)",
+        titleVi: "Bạn đăng ký thành công",
         message:
           message ||
           "You have successfully activated your phone number (您已成功激活手机号码)",
@@ -23,6 +31,7 @@ function SuccessPageContent() {
     } else if (type === "info") {
       return {
         title: "Update Successful! (更新成功!)",
+        titleVi: "Bạn đã cập nhật thông tin thành công.",
         message:
           "You have successfully updated your information (您已成功更新信息)",
         backText: "Back to Admin (返回管理页面)",
@@ -31,6 +40,7 @@ function SuccessPageContent() {
     } else {
       return {
         title: "Success! (成功!)",
+        titleVi: "Thao tác thành công.",
         message: message || "Operation completed successfully (操作成功完成)",
         backText: "Back to Home (返回首页)",
         backUrl: "/",
@@ -70,9 +80,16 @@ function SuccessPageContent() {
         </div>
 
         {/* Success Title */}
-        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4">
+        <h1
+          className={`text-2xl lg:text-3xl font-bold text-gray-900 ${successData.titleVi ? "mb-2" : "mb-4"}`}
+        >
           {successData.title}
         </h1>
+        {successData.titleVi ? (
+          <p className="mb-4 text-xl font-semibold text-emerald-800">
+            {successData.titleVi}
+          </p>
+        ) : null}
 
         {/* Success Message */}
         <p className="text-lg text-gray-700 mb-8 leading-relaxed">
