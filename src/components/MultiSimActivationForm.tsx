@@ -168,6 +168,9 @@ export default function MultiSimActivationForm() {
           <h3 className="text-xl lg:text-2xl font-bold text-gray-900">
             Multi-SIM Activation (多SIM卡激活)
           </h3>
+          <p className="text-sm font-semibold text-emerald-800">
+            Kích hoạt nhiều SIM cùng lúc
+          </p>
           <p className="text-gray-600 text-sm">
             Activate multiple SIM cards simultaneously (同时激活多张SIM卡)
           </p>
@@ -181,13 +184,16 @@ export default function MultiSimActivationForm() {
             <label className="block text-base font-bold text-gray-900">
               Mobile Numbers (手机号码) ({simInputs.length}/20)
             </label>
+            <span className="hidden text-xs font-medium text-gray-600 sm:inline">
+              Nhập số thuê bao
+            </span>
             <button
               type="button"
               onClick={handleAddSim}
               disabled={simInputs.length >= 20}
               className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              + Add SIM
+              + Add SIM (Thêm SIM)
             </button>
           </div>
 
@@ -214,7 +220,7 @@ export default function MultiSimActivationForm() {
                   value={sim.phoneNumber}
                   onChange={(e) => handlePhoneChange(sim.id, e.target.value)}
                   className="block w-full pl-12 pr-4 py-4 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 text-lg font-medium shadow-sm text-gray-900 placeholder:text-gray-500 placeholder:font-medium"
-                  placeholder="Enter phone number"
+                  placeholder="Enter phone number (Nhập số thuê bao)"
                   disabled={isPending}
                 />
               </div>
@@ -236,6 +242,9 @@ export default function MultiSimActivationForm() {
           <label className="block text-base font-bold text-gray-900 mb-3">
             CAPTCHA verify (我不是机器人)
           </label>
+          <p className="-mt-2 mb-3 text-xs font-medium text-gray-600">
+            Captcha: tick vào ô vuông
+          </p>
           <SimpleCaptchaCheckbox
             onVerify={handleCaptchaVerify}
             className="w-full"
@@ -276,7 +285,7 @@ export default function MultiSimActivationForm() {
           ) : (
             `ACTIVE ${
               simInputs.filter((s) => s.phoneNumber.trim()).length
-            } SIM CARDS (激活${
+            } SIM CARDS (Đăng ký gói) (激活${
               simInputs.filter((s) => s.phoneNumber.trim()).length
             }张SIM卡)`
           )}
@@ -287,6 +296,9 @@ export default function MultiSimActivationForm() {
         <p className="text-xs lg:text-sm font-medium text-gray-600">
           By activating, you agree to our terms of service
           (激活即表示您同意我们的服务条款)
+        </p>
+        <p className="mt-1 text-xs font-semibold text-gray-700">
+          Khi bấm kích hoạt, bạn đồng ý với điều khoản dịch vụ
         </p>
       </div>
     </div>
