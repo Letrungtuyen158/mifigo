@@ -6,6 +6,13 @@ export interface PhoneActivationResult {
   data?: any;
 }
 
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 1000;
+
+async function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export async function activatePhoneAction(
   prevState: PhoneActivationResult,
   formData: FormData
@@ -28,87 +35,101 @@ export async function activatePhoneAction(
     };
   }
 
-  try {
-    const apiUrl =
-      process.env.BACKEND_API_URL ||
-      "http://localhost:4000/api/user/active-phone-number";
+  const apiUrl =
+    process.env.BACKEND_API_URL ||
+    "http://localhost:4000/api/user/active-phone-number";
 
-    const requestBody = {
-      phoneNumber,
-    };
+  const requestBody = {
+    phoneNumber,
+  };
 
-    console.log("Request URL:", apiUrl);
-    console.log("Request Body:", JSON.stringify(requestBody, null, 2));
+  let lastError: unknown;
 
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "ngrok-skip-browser-warning": "69420",
-      },
-      body: JSON.stringify(requestBody),
-      // Set infinite timeout
-      signal: null,
-    });
-    console.log(response, 444444444444444);
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      console.log(`Request attempt ${attempt}/${MAX_RETRIES}`);
+      console.log("Request URL:", apiUrl);
+      console.log("Request Body:", JSON.stringify(requestBody, null, 2));
 
-    // Check if response is ok
-    if (!response.ok) {
-      console.error(`API Error: ${response.status} ${response.statusText}`);
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "69420",
+        },
+        body: JSON.stringify(requestBody),
+        // Set infinite timeout
+        signal: null,
+      });
+      console.log(response, 444444444444444);
 
-      // Try to get error details from response body
-      try {
-        const errorText = await response.text();
-        console.error("Error response body:", errorText);
-      } catch (e) {
-        console.error("Could not read error response body");
+      // Check if response is ok
+      if (!response.ok) {
+        console.error(`API Error: ${response.status} ${response.statusText}`);
+
+        // Try to get error details from response body
+        try {
+          const errorText = await response.text();
+          console.error("Error response body:", errorText);
+        } catch (e) {
+          console.error("Could not read error response body");
+        }
+
+        throw new Error(
+          `Lỗi kết nối: ${response.status} ${response.statusText}`
+        );
       }
 
-      return {
-        success: false,
-        message: `Lỗi kết nối: ${response.status} ${response.statusText}`,
-      };
-    }
+      // Check content type to ensure we're getting JSON
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        console.error("API returned non-JSON response:", contentType);
+        throw new Error("Lỗi: API trả về dữ liệu không hợp lệ");
+      }
 
-    // Check content type to ensure we're getting JSON
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      console.error("API returned non-JSON response:", contentType);
-      return {
-        success: false,
-        message: "Lỗi: API trả về dữ liệu không hợp lệ",
-      };
-    }
+      const result = await response.json();
+      console.log(result, 3333333333333333);
 
-    const result = await response.json();
-    console.log(result, 3333333333333333);
+      // Check for specific success message
+      if (result.message === "Kích hoạt gói cước thành công") {
+        return {
+          success: true,
+          message: result.message,
+          data: JSON.stringify(result.data),
+        };
+      } else if (result.success) {
+        // Fallback for other success cases
+        return {
+          success: true,
+          message: result.message || "Kích hoạt số điện thoại thành công!",
+          data: JSON.stringify(result.data),
+        };
+      } else {
+        // Business logic failure — không retry
+        return {
+          success: false,
+          message: result.message || "Kích hoạt thất bại. Vui lòng thử lại!",
+        };
+      }
+    } catch (error) {
+      lastError = error;
+      console.error(
+        `Server-side API error (attempt ${attempt}/${MAX_RETRIES}):`,
+        error
+      );
 
-    // Check for specific success message
-    if (result.message === "Kích hoạt gói cước thành công") {
-      return {
-        success: true,
-        message: result.message,
-        data: JSON.stringify(result.data),
-      };
-    } else if (result.success) {
-      // Fallback for other success cases
-      return {
-        success: true,
-        message: result.message || "Kích hoạt số điện thoại thành công!",
-        data: JSON.stringify(result.data),
-      };
-    } else {
-      return {
-        success: false,
-        message: result.message || "Kích hoạt thất bại. Vui lòng thử lại!",
-      };
+      if (attempt < MAX_RETRIES) {
+        await sleep(RETRY_DELAY_MS);
+      }
     }
-  } catch (error) {
-    console.error("Server-side API error:", error);
-    return {
-      success: false,
-      message: "Có lỗi xảy ra. Vui lòng thử lại!",
-    };
   }
-}
 
+  console.error("All retry attempts failed:", lastError);
+  return {
+    success: false,
+    message:
+      lastError instanceof Error
+        ? lastError.message
+        : "Có lỗi xảy ra. Vui lòng thử lại!",
+  };
+}
