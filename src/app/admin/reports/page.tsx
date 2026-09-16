@@ -10,21 +10,14 @@ function formatDateForInput(iso: string) {
   return iso.slice(0, 10);
 }
 
-function getDefaultRange(): { from: string; to: string } {
-  const to = new Date();
-  const from = new Date(to);
-  from.setDate(from.getDate() - 6);
-  return {
-    from: formatDateForInput(from.toISOString()),
-    to: formatDateForInput(to.toISOString()),
-  };
+function getDefaultDate(): string {
+  return formatDateForInput(new Date().toISOString());
 }
 
 export default function AdminReportsPage() {
   const [report, setReport] = useState<SalesReportResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [date, setDate] = useState("");
   const router = useRouter();
 
   useEffect(() => {
@@ -56,22 +49,18 @@ export default function AdminReportsPage() {
   }, []);
 
   useEffect(() => {
-    const { from, to } = getDefaultRange();
-    setDateFrom(from);
-    setDateTo(to);
-    void loadReport(from, to);
+    const today = getDefaultDate();
+    setDate(today);
+    // API vẫn nhận 2 key from/to; UI chỉ nhập 1 ngày nên gửi cùng giá trị
+    void loadReport(today, today);
   }, [loadReport]);
 
   function handleApplyRange() {
-    if (!dateFrom || !dateTo) {
-      toast.error("Chọn khoảng từ ngày - đến ngày.");
+    if (!date) {
+      toast.error("Vui lòng chọn ngày.");
       return;
     }
-    if (new Date(dateFrom) > new Date(dateTo)) {
-      toast.error("Từ ngày phải trước đến ngày.");
-      return;
-    }
-    void loadReport(dateFrom, dateTo);
+    void loadReport(date, date);
   }
 
   // Hỗ trợ cả format mới (summary + series) và format cũ (totalRevenue + dailyRevenue)
@@ -156,20 +145,13 @@ export default function AdminReportsPage() {
           {/* Tabs: BÁN HÀNG (active), KHO, TÀI CHÍNH */}
      
 
-          {/* Date range + Chi nhánh */}
+          {/* Date + Chi nhánh */}
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2">
               <input
                 type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                className="text-sm text-slate-900 outline-none"
-              />
-              <span className="text-slate-400">–</span>
-              <input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
                 className="text-sm text-slate-900 outline-none"
               />
             </div>
